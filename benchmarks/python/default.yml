@@ -1,0 +1,45 @@
+name: Python Benchmark (Default)
+author: André Brandão <https://github.com/brandao07>
+description: Python benchmarks using Python 3.14 Alpine
+
+services:
+  python-container:
+    image: python:3.14.0-alpine3.22
+    command: sleep infinity
+
+flow:
+  - name: Python-Binary-Trees
+    container: python-container
+    commands:
+      - type: console
+        command: python3 -OO /tmp/repo/benchmarks/python/binary-trees/main.py 21
+
+  - name: Python-Fannkuch-Redux
+    container: python-container
+    commands:
+      - type: console
+        command: python3 -OO /tmp/repo/benchmarks/python/fannkuch-redux/main.py 12
+
+  - name: Python-K-Nucleotide
+    container: python-container
+    commands:
+      - type: console
+        command: sh -c "python3 -OO /tmp/repo/benchmarks/python/k-nucleotide/main.py 0 < /tmp/repo/inputs/fasta-2500000.txt"
+
+  - name: Python-N-Body
+    container: python-container
+    commands:
+      - type: console
+        command: python3 -OO /tmp/repo/benchmarks/python/n-body/main.py 50000000
+
+  - name: Python-Regex-Redux
+    container: python-container
+    commands:
+      - type: console
+        command: sh -c "python3 -OO /tmp/repo/benchmarks/python/regex-redux/main.py 0 < /tmp/repo/inputs/fasta-2500000.txt"
+
+  - name: Python-Spectral-Norm
+    container: python-container
+    commands:
+      - type: console
+        command: python3 -OO /tmp/repo/benchmarks/python/spectral-norm/main.py 5500
