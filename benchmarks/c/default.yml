@@ -24,7 +24,7 @@ flow:
       - type: console
         command: /tmp/main 12
 
-  - name: Go-K-Nucleotide
+  - name: C-K-Nucleotide
     container: c-container
     commands:
       - type: console
