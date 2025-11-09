@@ -1,0 +1,21 @@
+name: Haskell Benchmark (Mandelbrot)
+author: André Brandão <https://github.com/brandao07>
+description: Haskell benchmarks using GHC 9.10.1
+
+services:
+  haskell-container:
+    image: haskell:9.10.1
+    setup-commands:
+      - command: bash -c "apt-get update && apt-get install -y --no-install-recommends libpcre2-dev wget gnupg && rm -rf /var/lib/apt/lists/*"
+      - command: bash -c "cabal update && cabal install --lib parallel ghc-compact hashable hashtables massiv vector containers bytestring"
+    command: sleep infinity
+
+flow:
+  #TODO: Add LLVM x86
+  # - name: Haskell-Mandelbrot
+  #   container: haskell-container
+  #   commands:
+  #     - type: console
+  #       command: sh -c "mkdir -p /tmp/haskell-mandelbrot && ghc -fllvm -O2 -XBangPatterns -threaded -rtsopts -XMagicHash -XUnboxedTuples /tmp/repo/benchmarks/haskell/mandelbrot/main.hs -outputdir /tmp/haskell-mandelbrot -odir /tmp/haskell-mandelbrot -hidir /tmp/haskell-mandelbrot -o /tmp/haskell-mandelbrot/main"
+  #     - type: console
+  #       command: /tmp/haskell-mandelbrot/main +RTS -N4 -RTS 160

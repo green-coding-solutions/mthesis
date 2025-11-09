@@ -90,14 +90,14 @@
 
 ## Haskell
 
-- [binary-trees](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/binarytrees-ghc-4.html)*
-- [fannkuch-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fannkuchredux-ghc-3.html)*
-- [fasta](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fasta-ghc-6.html)*
-- [k-nucleotide](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-ghc-2.html)*
-- [mandelbrot](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-ghc-3.html)*
-- [n-body](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-ghc-2.html)*
-- [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-ghc-3.html)*
-- [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-ghc-4.html)*
+- [binary-trees](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/binarytrees-ghc-4.html)
+- [fannkuch-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fannkuchredux-ghc-3.html)
+- [fasta](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fasta-ghc-6.html)
+- [k-nucleotide](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-ghc-2.html)
+- [mandelbrot](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-ghc-3.html) ❌ -> Test on x86
+- [n-body](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-ghc-2.html)
+- [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-ghc-3.html)
+- [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-ghc-4.html)
 
 ## Java
 

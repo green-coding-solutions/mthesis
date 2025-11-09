@@ -1,0 +1,60 @@
+name: Haskell Benchmark (Default)
+author: André Brandão <https://github.com/brandao07>
+description: Haskell benchmarks using GHC 9.10.1
+
+services:
+  haskell-container:
+    image: haskell:9.10.1
+    setup-commands:
+      - command: bash -c "apt-get update && apt-get install -y --no-install-recommends libpcre2-dev wget xz-utils && rm -rf /var/lib/apt/lists/*"
+      - command: bash -c "cabal update && cabal install --lib parallel ghc-compact hashable hashtables massiv vector containers bytestring"
+    command: sleep infinity
+
+flow:
+  - name: Haskell-Binary-Trees
+    container: haskell-container
+    commands:
+      - type: console
+        command: sh -c "mkdir -p /tmp/haskell-binary-trees && ghc -O2 -XBangPatterns -threaded -rtsopts -XMagicHash /tmp/repo/benchmarks/haskell/binary-trees/main.hs -outputdir /tmp/haskell-binary-trees -odir /tmp/haskell-binary-trees -hidir /tmp/haskell-binary-trees -o /tmp/haskell-binary-trees/main"
+      - type: console
+        command: /tmp/haskell-binary-trees/main +RTS -N4 -K128M -H -RTS 5
+
+  - name: Haskell-Fannkuch-Redux
+    container: haskell-container
+    commands:
+      - type: console
+        command: sh -c "mkdir -p /tmp/haskell-fannkuch-redux && ghc -O2 -XBangPatterns -threaded -rtsopts -XMagicHash /tmp/repo/benchmarks/haskell/fannkuch-redux/main.hs -outputdir /tmp/haskell-fannkuch-redux -odir /tmp/haskell-fannkuch-redux -hidir /tmp/haskell-fannkuch-redux -o /tmp/haskell-fannkuch-redux/main"
+      - type: console
+        command: /tmp/haskell-fannkuch-redux/main +RTS -N4 -RTS 4
+
+  - name: Haskell-K-Nucleotide
+    container: haskell-container
+    commands:
+      - type: console
+        command: sh -c "mkdir -p /tmp/haskell-k-nucleotide && ghc -O2 -XBangPatterns -threaded -rtsopts -XMagicHash /tmp/repo/benchmarks/haskell/k-nucleotide/main.hs -outputdir /tmp/haskell-k-nucleotide -odir /tmp/haskell-k-nucleotide -hidir /tmp/haskell-k-nucleotide -o /tmp/haskell-k-nucleotide/main"
+      - type: console
+        command: sh -c "/tmp/haskell-k-nucleotide/main +RTS -N4 -K2048M -RTS 0 < /tmp/repo/inputs/fasta-100.txt"
+
+  - name: Haskell-N-Body
+    container: haskell-container
+    commands:
+      - type: console
+        command: sh -c "mkdir -p /tmp/haskell-n-body && ghc -O2 -XBangPatterns -threaded -rtsopts -XMagicHash /tmp/repo/benchmarks/haskell/n-body/main.hs -outputdir /tmp/haskell-n-body -odir /tmp/haskell-n-body -hidir /tmp/haskell-n-body -o /tmp/haskell-n-body/main"
+      - type: console
+        command: /tmp/haskell-n-body/main +RTS -N4 -RTS 500
+
+  - name: Haskell-Regex-Redux
+    container: haskell-container
+    commands:
+      - type: console
+        command: sh -c "mkdir -p /tmp/haskell-regex-redux && ghc -O2 -XBangPatterns -threaded -rtsopts -XForeignFunctionInterface -XCApiFFI -optc \"-DPCRE2_CODE_UNIT_WIDTH=8\" /tmp/repo/benchmarks/haskell/regex-redux/main.hs -outputdir /tmp/haskell-regex-redux -odir /tmp/haskell-regex-redux -hidir /tmp/haskell-regex-redux -o /tmp/haskell-regex-redux/main -lpcre2-8"
+      - type: console
+        command: sh -c "/tmp/haskell-regex-redux/main +RTS -N4 -H250M -RTS 0 < /tmp/repo/inputs/fasta-100.txt"
+
+  - name: Haskell-Spectral-Norm
+    container: haskell-container
+    commands:
+      - type: console
+        command: sh -c "mkdir -p /tmp/haskell-spectral-norm && ghc -O2 -XBangPatterns -threaded -rtsopts -XMagicHash /tmp/repo/benchmarks/haskell/spectral-norm/main.hs -outputdir /tmp/haskell-spectral-norm -odir /tmp/haskell-spectral-norm -hidir /tmp/haskell-spectral-norm -o /tmp/haskell-spectral-norm/main"
+      - type: console
+        command: /tmp/haskell-spectral-norm/main +RTS -N4 -RTS 55
