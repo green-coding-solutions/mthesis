@@ -12,34 +12,46 @@ flow:
     container: go-container
     commands:
       - type: console
-        command: go run /tmp/repo/benchmarks/go/binary-trees/main.go 21
+        command: sh -c "go build -o /tmp/go-binary-trees /tmp/repo/benchmarks/go/binary-trees/main.go"
+      - type: console
+        command: /tmp/go-binary-trees 21
 
   - name: Go-Fannkuch-Redux
     container: go-container
     commands:
       - type: console
-        command: go run /tmp/repo/benchmarks/go/fannkuch-redux/main.go 12
+        command: sh -c "go build -o /tmp/go-fannkuch-redux /tmp/repo/benchmarks/go/fannkuch-redux/main.go"
+      - type: console
+        command: /tmp/go-fannkuch-redux 12
 
   - name: Go-K-Nucleotide
     container: go-container
     commands:
       - type: console
-        command: sh -c "go run /tmp/repo/benchmarks/go/k-nucleotide/main.go < /tmp/repo/inputs/fasta-2500000.txt"
+        command: sh -c "go build -o /tmp/go-k-nucleotide /tmp/repo/benchmarks/go/k-nucleotide/main.go"
+      - type: console
+        command: sh -c "/tmp/go-k-nucleotide < /tmp/repo/inputs/fasta-2500000.txt"
 
   - name: Go-N-Body
     container: go-container
     commands:
       - type: console
-        command: go run /tmp/repo/benchmarks/go/n-body/main.go 50000000
+        command: sh -c "go build -o /tmp/go-n-body /tmp/repo/benchmarks/go/n-body/main.go"
+      - type: console
+        command: /tmp/go-n-body 50000000
 
   - name: Go-Regex-Redux
     container: go-container
     commands:
       - type: console
-        command: sh -c "go run /tmp/repo/benchmarks/go/regex-redux/main.go < /tmp/repo/inputs/fasta-2500000.txt"
+        command: sh -c "go build -o /tmp/go-regex-redux /tmp/repo/benchmarks/go/regex-redux/main.go"
+      - type: console
+        command: sh -c "/tmp/go-regex-redux < /tmp/repo/inputs/fasta-2500000.txt"
 
   - name: Go-Spectral-Norm
     container: go-container
     commands:
       - type: console
-        command: go run /tmp/repo/benchmarks/go/spectral-norm/main.go 5500
+        command: sh -c "go build -o /tmp/go-spectral-norm /tmp/repo/benchmarks/go/spectral-norm/main.go"
+      - type: console
+        command: /tmp/go-spectral-norm 5500
