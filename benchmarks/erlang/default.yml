@@ -1,0 +1,45 @@
+name: Erlang Benchmark (Default)
+author: André Brandão <https://github.com/brandao07>
+description: Erlang benchmarks using Erlang 28.1.0.0 Alpine
+
+services:
+  erlang-container:
+    image: erlang:28.1.0.0-alpine
+    command: sleep infinity
+
+flow:
+  - name: Erlang-Binary-Trees
+    container: erlang-container
+    commands:
+      - type: console
+        command: sh -c "erlc /tmp/repo/benchmarks/erlang/binary-trees/binarytrees.erl && erl -pa /tmp/repo/benchmarks/erlang/binary-trees -noshell -smp enable -run binarytrees main 21"
+
+  - name: Erlang-Fannkuch-Redux
+    container: erlang-container
+    commands:
+      - type: console
+        command: sh -c "erlc /tmp/repo/benchmarks/erlang/fannkuch-redux/fannkuchredux.erl && erl -pa /tmp/repo/benchmarks/erlang/fannkuch-redux -noshell -smp enable -run fannkuchredux main 12"
+
+  - name: Erlang-K-Nucleotide
+    container: erlang-container
+    commands:
+      - type: console
+        command: sh -c "erlc /tmp/repo/benchmarks/erlang/k-nucleotide/knucleotide.erl && erl -pa /tmp/repo/benchmarks/erlang/k-nucleotide -noshell -smp enable -run knucleotide main dummy < /tmp/repo/inputs/fasta-2500000.txt"
+
+  - name: Erlang-N-Body
+    container: erlang-container
+    commands:
+      - type: console
+        command: sh -c "erlc /tmp/repo/benchmarks/erlang/n-body/nbody.erl && erl -pa /tmp/repo/benchmarks/erlang/n-body -noshell -smp enable -run nbody main 50000000"
+
+  - name: Erlang-Regex-Redux
+    container: erlang-container
+    commands:
+      - type: console
+        command: sh -c "erlc /tmp/repo/benchmarks/erlang/regex-redux/regexredux.erl && erl -pa /tmp/repo/benchmarks/erlang/regex-redux -noshell -smp enable -run regexredux main dummy < /tmp/repo/inputs/fasta-2500000.txt"
+
+  - name: Erlang-Spectral-Norm
+    container: erlang-container
+    commands:
+      - type: console
+        command: sh -c "erlc /tmp/repo/benchmarks/erlang/spectral-norm/spectralnorm.erl && erl -pa /tmp/repo/benchmarks/erlang/spectral-norm -noshell -smp enable -run spectralnorm main 5500"

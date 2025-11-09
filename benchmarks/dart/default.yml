@@ -14,7 +14,7 @@ flow:
       - type: console
         command: dart compile exe /tmp/repo/benchmarks/dart/binary-trees/main.dart -o /tmp/main
       - type: console
-        command: ./tmp/main 21
+        command: /tmp/main 21
 
   - name: Dart-Fannkuch-Redux
     container: dart-container
@@ -22,7 +22,7 @@ flow:
       - type: console
         command: dart compile exe /tmp/repo/benchmarks/dart/fannkuch-redux/main.dart -o /tmp/main
       - type: console
-        command: ./tmp/main 12
+        command: /tmp/main 12
 
   - name: Dart-K-Nucleotide
     container: dart-container
@@ -38,7 +38,7 @@ flow:
       - type: console
         command: dart compile exe /tmp/repo/benchmarks/dart/n-body/main.dart -o /tmp/main
       - type: console
-        command: ./tmp/main 50000000
+        command: /tmp/main 50000000
 
   - name: Dart-Regex-Redux
     container: dart-container
@@ -54,4 +54,4 @@ flow:
       - type: console
         command: dart compile exe /tmp/repo/benchmarks/dart/spectral-norm/main.dart -o /tmp/main
       - type: console
-        command: ./tmp/main 5500
+        command: /tmp/main 5500
