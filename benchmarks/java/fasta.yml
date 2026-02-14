@@ -1,0 +1,18 @@
+name: Java Benchmark (Fasta)
+author: André Brandão <https://github.com/brandao07>
+description: Java Fasta benchmark using GraalVM Native Image 23.0.2
+
+services:
+  java-container:
+    image: ghcr.io/graalvm/native-image-community:23.0.2
+    entrypoint: /bin/sh
+    command: -c "sleep infinity"
+
+flow:
+  - name: Java-Fasta
+    container: java-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/java/fasta/build_in_tmp.sh
+      - type: console
+        command: /tmp/java-build/fasta/fasta.graalvmaot-6.graalvmaot_run 25000000
