@@ -1,0 +1,12 @@
+[package]
+name = "binary-trees"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "binary-trees"
+path = "main.rs"
+
+[dependencies]
+bumpalo = "3"
+rayon = "1"

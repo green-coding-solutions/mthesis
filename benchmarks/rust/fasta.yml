@@ -1,0 +1,17 @@
+name: Rust Benchmark (Fasta)
+author: André Brandão <https://github.com/brandao07>
+description: Rust benchmarks using Rust 1.93 Alpine
+
+services:
+  rust-container:
+    image: rust:1.93-alpine
+    command: sleep infinity
+
+flow:
+  - name: Rust-Fasta
+    container: rust-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/rust/fasta/build_in_tmp.sh
+      - type: console
+        command: /tmp/rust-fasta 25000000

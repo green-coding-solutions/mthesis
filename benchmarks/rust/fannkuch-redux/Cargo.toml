@@ -1,0 +1,11 @@
+[package]
+name = "fannkuch-redux"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "fannkuch-redux"
+path = "main.rs"
+
+[dependencies]
+rayon = "1"

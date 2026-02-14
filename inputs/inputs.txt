@@ -4,5 +4,5 @@
 - k-nucleotide: fasta-2500000.txt
 - mandelbrot: 16000
 - n-body: 50000000
-- regex-redux: fasta-2500000.txt
+- regex-redux: fasta-5000000.txt
 - spectral-norm: 5500
