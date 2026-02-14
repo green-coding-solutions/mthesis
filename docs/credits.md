@@ -110,16 +110,16 @@
 - [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-graalvmaot-3.html)
 - [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-graalvmaot-3.html)
 
-## Lua
+## Lua ✅
 
-- [binary-trees]()
-- [fannkuch-redux]()
-- [fasta]()
-- [k-nucleotide]()
-- [mandelbrot]()
-- [n-body]()
-- [regex-redux]()
-- [spectral-norm]()
+- [binary-trees](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/binarytrees-lua-4.html)
+- [fannkuch-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fannkuchredux-lua-1.html)
+- [fasta](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fasta-lua-2.html)
+- [k-nucleotide](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-lua-2.html)
+- [mandelbrot](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-lua-6.html)
+- [n-body](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-lua-2.html)
+- [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-lua-1.html)
+- [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-lua-1.html)
 
 ## NodeJS ✅
 
