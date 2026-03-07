@@ -46,7 +46,7 @@ flow:
       - type: console
         command: sh /tmp/repo/benchmarks/rust/regex-redux/build_in_tmp.sh
       - type: console
-        command: sh -c "/tmp/rust-regex-redux < /tmp/repo/inputs/fasta-2500000.txt"
+        command: sh -c "/tmp/rust-regex-redux < /tmp/repo/inputs/fasta-5000000.txt"
 
   - name: Rust-Spectral-Norm
     container: rust-container

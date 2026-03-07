@@ -38,7 +38,7 @@ flow:
   #   container: csharp-container
   #   commands:
   #     - type: console
-  #       command: bash -c "dotnet new console -n app --output /tmp/out --force && cp /tmp/repo/benchmarks/csharp/regex-redux/main.cs /tmp/out/Program.cs && cd /tmp/out && dotnet run -c Release -p:AllowUnsafeBlocks=true -- 0 < /tmp/repo/inputs/fasta-2500000.txt"
+  #       command: bash -c "dotnet new console -n app --output /tmp/out --force && cp /tmp/repo/benchmarks/csharp/regex-redux/main.cs /tmp/out/Program.cs && cd /tmp/out && dotnet run -c Release -p:AllowUnsafeBlocks=true -- 0 < /tmp/repo/inputs/fasta-5000000.txt"
 
   - name: CSharp-Spectral-Norm
     container: csharp-container

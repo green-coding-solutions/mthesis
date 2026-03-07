@@ -47,7 +47,7 @@ flow:
       - type: console
         command: sh /tmp/repo/benchmarks/java/regex-redux/build_in_tmp.sh
       - type: console
-        command: sh -c "/tmp/java-build/regex-redux/regexredux.graalvmaot-3.graalvmaot_run 0 < /tmp/repo/inputs/fasta-2500000.txt"
+        command: sh -c "/tmp/java-build/regex-redux/regexredux.graalvmaot-3.graalvmaot_run 0 < /tmp/repo/inputs/fasta-5000000.txt"
 
   - name: Java-Spectral-Norm
     container: java-container

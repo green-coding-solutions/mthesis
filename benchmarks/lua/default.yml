@@ -46,7 +46,7 @@ flow:
       - type: console
         command: sh /tmp/repo/benchmarks/lua/regex-redux/build_in_tmp.sh
       - type: console
-        command: sh -c "lua /tmp/lua-build/regex-redux/regexredux.lua_run 0 < /tmp/repo/inputs/fasta-2500000.txt"
+        command: sh -c "lua /tmp/lua-build/regex-redux/regexredux.lua_run 0 < /tmp/repo/inputs/fasta-5000000.txt"
 
   - name: Lua-Spectral-Norm
     container: lua-container

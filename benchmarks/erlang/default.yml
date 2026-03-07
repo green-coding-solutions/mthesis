@@ -36,7 +36,7 @@ flow:
     container: erlang-container
     commands:
       - type: console
-        command: sh -c "erlc /tmp/repo/benchmarks/erlang/regex-redux/regexredux.erl && erl -pa /tmp/repo/benchmarks/erlang/regex-redux -noshell -smp enable -run regexredux main dummy < /tmp/repo/inputs/fasta-2500000.txt"
+        command: sh -c "erlc /tmp/repo/benchmarks/erlang/regex-redux/regexredux.erl && erl -pa /tmp/repo/benchmarks/erlang/regex-redux -noshell -smp enable -run regexredux main dummy < /tmp/repo/inputs/fasta-5000000.txt"
 
   - name: Erlang-Spectral-Norm
     container: erlang-container

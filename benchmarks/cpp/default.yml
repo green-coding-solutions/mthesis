@@ -48,7 +48,7 @@ flow:
       - type: console
         command: g++ -pipe -Wall -O3 -fomit-frame-pointer -march=native /tmp/repo/benchmarks/cpp/regex-redux/main.cpp -o /tmp/main -lpcre2-8
       - type: console
-        command: sh -c "/tmp/main < /tmp/repo/inputs/fasta-2500000.txt"
+        command: sh -c "/tmp/main < /tmp/repo/inputs/fasta-5000000.txt"
 
   - name: CPP-Spectral-Norm
     container: cpp-container

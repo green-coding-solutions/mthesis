@@ -36,7 +36,7 @@ flow:
     container: node-container
     commands:
       - type: console
-        command: sh -c "node /tmp/repo/benchmarks/nodejs/regex-redux/main.js < /tmp/repo/inputs/fasta-2500000.txt"
+        command: sh -c "node /tmp/repo/benchmarks/nodejs/regex-redux/main.js < /tmp/repo/inputs/fasta-5000000.txt"
 
   - name: NodeJS-Spectral-Norm
     container: node-container

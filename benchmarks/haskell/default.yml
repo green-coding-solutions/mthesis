@@ -49,7 +49,7 @@ flow:
       - type: console
         command: sh -c "mkdir -p /tmp/haskell-regex-redux && ghc -O2 -XBangPatterns -threaded -rtsopts -XForeignFunctionInterface -XCApiFFI -optc \"-DPCRE2_CODE_UNIT_WIDTH=8\" /tmp/repo/benchmarks/haskell/regex-redux/main.hs -outputdir /tmp/haskell-regex-redux -odir /tmp/haskell-regex-redux -hidir /tmp/haskell-regex-redux -o /tmp/haskell-regex-redux/main -lpcre2-8"
       - type: console
-        command: sh -c "/tmp/haskell-regex-redux/main +RTS -N4 -H250M -RTS 0 < /tmp/repo/inputs/fasta-100.txt"
+        command: sh -c "/tmp/haskell-regex-redux/main +RTS -N4 -H250M -RTS 0 < /tmp/repo/inputs/fasta-5000000.txt"
 
   - name: Haskell-Spectral-Norm
     container: haskell-container

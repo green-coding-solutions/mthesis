@@ -46,7 +46,7 @@ flow:
       - type: console
         command: gcc -pipe -Wall -O3 -fomit-frame-pointer -march=native -fopenmp /tmp/repo/benchmarks/c/regex-redux/main.c -o /tmp/main -lpcre2-8
       - type: console
-        command: sh -c "/tmp/main < /tmp/repo/inputs/fasta-2500000.txt"
+        command: sh -c "/tmp/main < /tmp/repo/inputs/fasta-5000000.txt"
 
   - name: C-Spectral-Norm
     container: c-container

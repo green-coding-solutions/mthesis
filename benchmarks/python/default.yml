@@ -36,7 +36,7 @@ flow:
     container: python-container
     commands:
       - type: console
-        command: sh -c "python3 -OO /tmp/repo/benchmarks/python/regex-redux/main.py 0 < /tmp/repo/inputs/fasta-2500000.txt"
+        command: sh -c "python3 -OO /tmp/repo/benchmarks/python/regex-redux/main.py 0 < /tmp/repo/inputs/fasta-5000000.txt"
 
   - name: Python-Spectral-Norm
     container: python-container
