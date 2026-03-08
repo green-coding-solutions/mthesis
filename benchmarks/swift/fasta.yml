@@ -1,0 +1,17 @@
+name: Swift Benchmark (Fasta)
+author: André Brandão <https://github.com/brandao07>
+description: Swift Fasta benchmark using Swift 6.0.3 (runs on container architecture, e.g. arm64 on Apple Silicon)
+
+services:
+  swift-container:
+    image: swift:6.0.3
+    command: sleep infinity
+
+flow:
+  - name: Swift-Fasta
+    container: swift-container
+    commands:
+      - type: console
+        command: swiftc /tmp/repo/benchmarks/swift/fasta/main.swift -Ounchecked -wmo -o /tmp/swift-fasta
+      - type: console
+        command: /tmp/swift-fasta 25000000
