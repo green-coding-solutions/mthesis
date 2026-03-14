@@ -187,16 +187,16 @@
 - [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-python3-1.html)
 - [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-python3-4.html)
 
-## Ruby
+## Ruby ✅
 
-- [binary-trees]()
-- [fannkuch-redux]()
-- [fasta]()
-- [k-nucleotide]()
-- [mandelbrot]()
-- [n-body]()
-- [regex-redux]()
-- [spectral-norm]()
+- [binary-trees](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/binarytrees-ruby-5.html)
+- [fannkuch-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fannkuchredux-ruby-2.html)
+- [fasta](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fasta-ruby-6.html)
+- [k-nucleotide](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-ruby-1.html)
+- [mandelbrot](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-ruby-5.html)
+- [n-body](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-ruby-3.html)
+- [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-ruby-3.html)
+- [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-ruby-5.html)
 
 ## Rust
 
