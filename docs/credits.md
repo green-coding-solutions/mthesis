@@ -132,16 +132,16 @@
 - [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-node-3.html)
 - [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-node-6.html)
 
-## OCaml
+## OCaml ✅
 
-- [binary-trees]()
-- [fannkuch-redux]()
-- [fasta]()
-- [k-nucleotide]()
-- [mandelbrot]()
-- [n-body]()
-- [regex-redux]()
-- [spectral-norm]()
+- [binary-trees](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/binarytrees-ocaml-2.html)
+- [fannkuch-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fannkuchredux-ocaml-3.html)
+- [fasta](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fasta-ocaml-6.html)
+- [k-nucleotide](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-ocaml-3.html)
+- [mandelbrot](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-ocaml-1.html)
+- [n-body](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-ocaml-1.html)
+- [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-ocaml-3.html)
+- [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-ocaml-2.html)
 
 ## Pascal
 
