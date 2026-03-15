@@ -31,7 +31,7 @@
 - [mandelbrot](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-csharpaot-9.html)
 - [n-body]() ❌ -> Test on x86
 - [regex-redux]() ❌ -> Test on x86
-- [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-csharpaot-2.html) 
+- [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-csharpaot-2.html)
 
 ## Dart ✅
 
@@ -73,7 +73,7 @@
 - [fasta](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fasta-fsharpcore-3.html)
 - [k-nucleotide](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-fsharpcore-6.html)
 - [mandelbrot](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-fsharpcore-6.html)
-- [n-body](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-fsharpcore-6.html)*
+- [n-body](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-fsharpcore-6.html) ❌ -> Test on x86
 - [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-fsharpcore-6.html)
 - [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-fsharpcore-6.html)
 
@@ -84,7 +84,7 @@
 - [fasta](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fasta-go-2.html)
 - [k-nucleotide](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-go-7.html)
 - [mandelbrot](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-go-4.html)
-- [n-body](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-go-3.html) ❌ -> Test on x86
+- [n-body](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-go-3.html) 
 - [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-go-3.html)
 - [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-go-4.html)
 
