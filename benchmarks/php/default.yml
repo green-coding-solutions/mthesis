@@ -1,0 +1,59 @@
+name: PHP Benchmark (Default)
+author: André Brandão <https://github.com/brandao07>
+description: PHP benchmarks using PHP CLI
+
+services:
+  php-container:
+    image: php:8.4-cli
+    setup-commands:
+      - command: sh -lc "docker-php-ext-install -j\"$(nproc)\" shmop pcntl sysvmsg && docker-php-ext-enable shmop pcntl sysvmsg"
+    command: sleep infinity
+
+flow:
+  - name: PHP-Binary-Trees
+    container: php-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/php/binary-trees/build_in_tmp.sh
+      - type: console
+        command: /tmp/php-binary-trees 21
+
+  - name: PHP-Fannkuch-Redux
+    container: php-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/php/fannkuch-redux/build_in_tmp.sh
+      - type: console
+        command: /tmp/php-fannkuch-redux 12
+
+  - name: PHP-K-Nucleotide
+    container: php-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/php/k-nucleotide/build_in_tmp.sh
+      - type: console
+        command: sh -c "/tmp/php-k-nucleotide < /tmp/repo/inputs/fasta-2500000.txt"
+
+  - name: PHP-N-Body
+    container: php-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/php/n-body/build_in_tmp.sh
+      - type: console
+        command: /tmp/php-n-body 50000000
+
+  - name: PHP-Spectral-Norm
+    container: php-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/php/spectral-norm/build_in_tmp.sh
+      - type: console
+        command: /tmp/php-spectral-norm 5500
+
+  - name: PHP-Regex-Redux
+    container: php-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/php/regex-redux/build_in_tmp.sh
+      - type: console
+        command: sh -c "/tmp/php-regex-redux < /tmp/repo/inputs/fasta-5000000.txt"
