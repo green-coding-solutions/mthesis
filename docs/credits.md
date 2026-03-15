@@ -66,16 +66,16 @@
 - [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-ifx-1.html)*
 - [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-ifx-3.html)*
 
-## F#
+## F# ✅
 
-- [binary-trees](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/binarytrees-fsharpcore-7.html)*
-- [fannkuch-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fannkuchredux-fsharpcore-6.html)*
-- [fasta](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fasta-fsharpcore-3.html)*
-- [k-nucleotide](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-fsharpcore-6.html)*
-- [mandelbrot](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-fsharpcore-6.html)*
-- [n-body](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-fsharpcore-6.html)*
-- [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-fsharpcore-6.html)*
-- [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-fsharpcore-6.html)*
+- [binary-trees](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/binarytrees-fsharpcore-7.html)
+- [fannkuch-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fannkuchredux-fsharpcore-6.html)
+- [fasta](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fasta-fsharpcore-3.html)
+- [k-nucleotide](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-fsharpcore-6.html)
+- [mandelbrot](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-fsharpcore-6.html)
+- [n-body](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-fsharpcore-6.html)
+- [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-fsharpcore-6.html)
+- [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-fsharpcore-6.html)
 
 ## Go ✅
 
