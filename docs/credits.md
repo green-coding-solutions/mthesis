@@ -143,17 +143,6 @@
 - [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-ocaml-3.html)
 - [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-ocaml-2.html)
 
-## Pascal
-
-- [binary-trees]()
-- [fannkuch-redux]()
-- [fasta]()
-- [k-nucleotide]()
-- [mandelbrot]()
-- [n-body]()
-- [regex-redux]()
-- [spectral-norm]()
-
 ## Perl ✅
 
 - [binary-trees](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/binarytrees-perl-6.html)
