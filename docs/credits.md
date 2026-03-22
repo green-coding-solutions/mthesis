@@ -154,16 +154,16 @@
 - [regex-redux]()
 - [spectral-norm]()
 
-## Perl
+## Perl ✅
 
-- [binary-trees]()
-- [fannkuch-redux]()
-- [fasta]()
-- [k-nucleotide]()
-- [mandelbrot]()
-- [n-body]()
-- [regex-redux]()
-- [spectral-norm]()
+- [binary-trees](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/binarytrees-perl-6.html)
+- [fannkuch-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fannkuchredux-perl-2.html)
+- [fasta](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fasta-perl-1.html)
+- [k-nucleotide](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-perl-1.html)
+- [mandelbrot](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-perl-1.html)
+- [n-body](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-perl-2.html)
+- [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-perl-3.html)
+- [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-perl-4.html)
 
 ## PHP ✅
 
