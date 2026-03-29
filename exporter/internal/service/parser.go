@@ -8,8 +8,8 @@ import (
 	"mthesis/exporter/internal/entity"
 )
 
-type ParserService struct {
-}
+// ParserService converts raw phase identifiers into canonical measurement dimensions.
+type ParserService struct{}
 
 func NewParserService() *ParserService {
 	return &ParserService{}
@@ -17,7 +17,8 @@ func NewParserService() *ParserService {
 
 // ParseMeasurementFromPhase parses a phase value like "005_Go-Binary-Trees"
 // and writes normalized values into a Measurement entity.
-func (s *ParserService) ParseMeasurementFromPhase(phase, value string) (entity.Measurement, error) {
+func (s *ParserService) ParseMeasurementFromPhase(pm entity.PhaseMetrics) (entity.Measurement, error) {
+	phase := pm.Phase
 	parts := strings.SplitN(strings.TrimSpace(phase), "_", 2)
 	if len(parts) != 2 || parts[1] == "" {
 		return entity.Measurement{}, fmt.Errorf("invalid phase format: %q", phase)
@@ -43,8 +44,23 @@ func (s *ParserService) ParseMeasurementFromPhase(phase, value string) (entity.M
 	}
 
 	return entity.Measurement{
+		RunID:     pm.RunID,
 		Language:  string(language),
 		Benchmark: string(benchmark),
-		Value:     value,
+		Metrics:   cloneMetrics(pm.Metrics),
 	}, nil
+}
+
+// cloneMetrics prevents downstream mutation of the original map owned by data DTOs.
+func cloneMetrics(metrics map[string]int64) map[string]int64 {
+	if len(metrics) == 0 {
+		return make(map[string]int64)
+	}
+
+	cloned := make(map[string]int64, len(metrics))
+	for k, v := range metrics {
+		cloned[k] = v
+	}
+
+	return cloned
 }
