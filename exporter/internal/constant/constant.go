@@ -2,6 +2,7 @@ package constant
 
 type Benchmark string
 
+// benchmarkByNormalized maps parser-normalized tokens to canonical benchmark names.
 var benchmarkByNormalized = map[string]Benchmark{
 	"binarytrees":   "binary-trees",
 	"fannkuchredux": "fannkuch-redux",
@@ -16,6 +17,7 @@ var benchmarkByNormalized = map[string]Benchmark{
 
 type ProgrammingLanguage string
 
+// languageByNormalized maps parser-normalized tokens to canonical language names.
 var languageByNormalized = map[string]ProgrammingLanguage{
 	"c":       "c",
 	"cpp":     "cpp",
