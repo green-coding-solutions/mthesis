@@ -3,3 +3,5 @@
 .DS_Store
 .gocache/
 inputs/fasta-5000000.txt
+/exporter/.env
+/.gomodcache/
