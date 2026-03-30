@@ -5,3 +5,6 @@
 inputs/fasta-5000000.txt
 /exporter/.env
 /.gomodcache/
+/.gocache_local/
+/exporter/results/
+/exporter/logs/

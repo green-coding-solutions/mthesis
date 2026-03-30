@@ -5,7 +5,10 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"mthesis/exporter/internal/entity"
 )
@@ -13,12 +16,14 @@ import (
 type ExporterService struct {
 	parserService      *ParserService
 	phaseMetricsSource PhaseMetricsBatchProvider
+	errorLogPath       string
 }
 
-// PhaseMetricsBatchProvider is the data dependency needed for batch CSV export.
+// PhaseMetricsBatchProvider is the data dependency needed for CSV export.
 type PhaseMetricsBatchProvider interface {
 	GetMetricKeys(ctx context.Context) ([]string, error)
 	GetPhaseMetricsBatch(ctx context.Context, limit, offset int) ([]entity.PhaseMetrics, error)
+	GetPhaseMetricsByID(ctx context.Context, runID string) ([]entity.PhaseMetrics, error)
 }
 
 func NewExporterService(parserService *ParserService, phaseMetricsSource PhaseMetricsBatchProvider) *ExporterService {
@@ -29,36 +34,29 @@ func NewExporterService(parserService *ParserService, phaseMetricsSource PhaseMe
 	return &ExporterService{
 		parserService:      parserService,
 		phaseMetricsSource: phaseMetricsSource,
+		errorLogPath:       "logs/error_logs.txt",
 	}
 }
 
 // ExportMeasurementsCSV streams measurements to CSV in paginated batches.
 // Header layout is fixed: run_id,language,benchmark,<metric keys...>.
 func (s *ExporterService) ExportMeasurementsCSV(ctx context.Context, w io.Writer, batchSize int) error {
-	if w == nil {
-		return fmt.Errorf("csv writer target must not be nil")
-	}
-	if s.phaseMetricsSource == nil {
-		return fmt.Errorf("phase metrics provider must not be nil")
+	if err := s.validateWriterAndProvider(w); err != nil {
+		return err
 	}
 	if batchSize <= 0 {
 		return fmt.Errorf("batch size must be greater than zero")
 	}
 
-	metricKeys, err := s.phaseMetricsSource.GetMetricKeys(ctx)
+	csvWriter, metricKeys, err := s.newCSVWriterWithHeader(ctx, w)
 	if err != nil {
-		return fmt.Errorf("load metric keys: %w", err)
+		return err
 	}
-
-	csvWriter := csv.NewWriter(w)
-	header := append([]string{"run_id", "language", "benchmark"}, metricKeys...)
-	if err := csvWriter.Write(header); err != nil {
-		return fmt.Errorf("write csv header: %w", err)
+	errorLog, err := s.openErrorLogWriter()
+	if err != nil {
+		return err
 	}
-	csvWriter.Flush()
-	if err := csvWriter.Error(); err != nil {
-		return fmt.Errorf("flush csv header: %w", err)
-	}
+	defer errorLog.Close()
 
 	offset := 0
 	for {
@@ -70,20 +68,11 @@ func (s *ExporterService) ExportMeasurementsCSV(ctx context.Context, w io.Writer
 			break
 		}
 
-		for _, pm := range phaseMetricsBatch {
-			measurement, err := s.parserService.ParseMeasurementFromPhase(pm)
-			if err != nil {
-				return fmt.Errorf("parse measurement for run %q phase %q: %w", pm.RunID, pm.Phase, err)
-			}
-
-			row := measurementToCSVRow(measurement, metricKeys)
-			if err := csvWriter.Write(row); err != nil {
-				return fmt.Errorf("write csv row for run %q: %w", measurement.RunID, err)
-			}
+		if err := s.writePhaseMetricsRows(csvWriter, phaseMetricsBatch, metricKeys, errorLog); err != nil {
+			return err
 		}
 
-		csvWriter.Flush()
-		if err := csvWriter.Error(); err != nil {
+		if err := flushCSV(csvWriter); err != nil {
 			return fmt.Errorf("flush csv batch at offset %d: %w", offset, err)
 		}
 
@@ -91,6 +80,132 @@ func (s *ExporterService) ExportMeasurementsCSV(ctx context.Context, w io.Writer
 	}
 
 	return nil
+}
+
+// ExportMeasurementsCSVByID writes measurements to CSV for a single run ID.
+// Header layout is fixed: run_id,language,benchmark,<metric keys...>.
+func (s *ExporterService) ExportMeasurementsCSVByID(ctx context.Context, w io.Writer, runID string) error {
+	if err := s.validateWriterAndProvider(w); err != nil {
+		return err
+	}
+	if strings.TrimSpace(runID) == "" {
+		return fmt.Errorf("runID must not be empty")
+	}
+
+	csvWriter, metricKeys, err := s.newCSVWriterWithHeader(ctx, w)
+	if err != nil {
+		return err
+	}
+	errorLog, err := s.openErrorLogWriter()
+	if err != nil {
+		return err
+	}
+	defer errorLog.Close()
+
+	phaseMetricsByID, err := s.phaseMetricsSource.GetPhaseMetricsByID(ctx, runID)
+	if err != nil {
+		return fmt.Errorf("load phase metrics for run %q: %w", runID, err)
+	}
+
+	if err := s.writePhaseMetricsRows(csvWriter, phaseMetricsByID, metricKeys, errorLog); err != nil {
+		return err
+	}
+
+	if err := flushCSV(csvWriter); err != nil {
+		return fmt.Errorf("flush csv rows for run %q: %w", runID, err)
+	}
+
+	return nil
+}
+
+func (s *ExporterService) validateWriterAndProvider(w io.Writer) error {
+	if w == nil {
+		return fmt.Errorf("csv writer target must not be nil")
+	}
+	if s.phaseMetricsSource == nil {
+		return fmt.Errorf("phase metrics provider must not be nil")
+	}
+	return nil
+}
+
+func (s *ExporterService) newCSVWriterWithHeader(ctx context.Context, w io.Writer) (*csv.Writer, []string, error) {
+	metricKeys, err := s.phaseMetricsSource.GetMetricKeys(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("load metric keys: %w", err)
+	}
+
+	csvWriter := csv.NewWriter(w)
+	header := append([]string{"run_id", "language", "benchmark"}, metricKeys...)
+	if err := csvWriter.Write(header); err != nil {
+		return nil, nil, fmt.Errorf("write csv header: %w", err)
+	}
+	if err := flushCSV(csvWriter); err != nil {
+		return nil, nil, fmt.Errorf("flush csv header: %w", err)
+	}
+
+	return csvWriter, metricKeys, nil
+}
+
+func (s *ExporterService) openErrorLogWriter() (io.WriteCloser, error) {
+	errorLogPath := strings.TrimSpace(s.errorLogPath)
+	if errorLogPath == "" {
+		errorLogPath = "logs/error_logs.txt"
+	}
+
+	errorLogDir := filepath.Dir(errorLogPath)
+	if err := os.MkdirAll(errorLogDir, 0o755); err != nil {
+		return nil, fmt.Errorf("create error log directory %q: %w", errorLogDir, err)
+	}
+
+	errorLog, err := os.OpenFile(errorLogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return nil, fmt.Errorf("open error log file %q: %w", errorLogPath, err)
+	}
+
+	return errorLog, nil
+}
+
+func (s *ExporterService) writePhaseMetricsRows(csvWriter *csv.Writer, phaseMetrics []entity.PhaseMetrics, metricKeys []string, errorLog io.Writer) error {
+	for _, pm := range phaseMetrics {
+		measurement, err := s.parserService.ParseMeasurementFromPhase(pm)
+		if err != nil {
+			if isUnknownDimensionError(err) {
+				if logErr := logSkippedPhase(errorLog, pm, err); logErr != nil {
+					return fmt.Errorf("write parse warning log for run %q phase %q: %w", pm.RunID, pm.Phase, logErr)
+				}
+				continue
+			}
+			return fmt.Errorf("parse measurement for run %q phase %q: %w", pm.RunID, pm.Phase, err)
+		}
+
+		row := measurementToCSVRow(measurement, metricKeys)
+		if err := csvWriter.Write(row); err != nil {
+			return fmt.Errorf("write csv row for run %q: %w", measurement.RunID, err)
+		}
+	}
+
+	return nil
+}
+
+func flushCSV(csvWriter *csv.Writer) error {
+	csvWriter.Flush()
+	return csvWriter.Error()
+}
+
+func isUnknownDimensionError(err error) bool {
+	msg := err.Error()
+	return strings.Contains(msg, "unknown programming language:") || strings.Contains(msg, "unknown benchmark:")
+}
+
+func logSkippedPhase(w io.Writer, phaseMetrics entity.PhaseMetrics, parseErr error) error {
+	_, err := fmt.Fprintf(
+		w,
+		"run_id=%q phase=%q skipped=true reason=%q\n",
+		phaseMetrics.RunID,
+		phaseMetrics.Phase,
+		parseErr.Error(),
+	)
+	return err
 }
 
 // measurementToCSVRow writes known scalar columns first, then one cell per metric key.

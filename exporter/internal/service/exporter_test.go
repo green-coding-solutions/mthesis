@@ -6,7 +6,9 @@ import (
 	"encoding/csv"
 	"errors"
 	"io"
+	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	"mthesis/exporter/internal/entity"
@@ -18,12 +20,21 @@ type batchCall struct {
 }
 
 type fakePhaseMetricsProvider struct {
-	metricKeys      []string
-	metricKeysErr   error
-	batches         [][]entity.PhaseMetrics
-	batchErrAtCall  map[int]error
-	getBatchCalls   []batchCall
-	getBatchCallIdx int
+	metricKeys          []string
+	metricKeysErr       error
+	batches             [][]entity.PhaseMetrics
+	batchErrAtCall      map[int]error
+	phaseMetricsByID    map[string][]entity.PhaseMetrics
+	phaseMetricsByIDErr map[string]error
+	getByIDCalls        []string
+	getBatchCalls       []batchCall
+	getBatchCallIdx     int
+}
+
+func withTempErrorLogPath(t *testing.T, exporterService *ExporterService) *ExporterService {
+	t.Helper()
+	exporterService.errorLogPath = t.TempDir() + "/logs/error_logs.txt"
+	return exporterService
 }
 
 func (f *fakePhaseMetricsProvider) GetMetricKeys(_ context.Context) ([]string, error) {
@@ -48,6 +59,19 @@ func (f *fakePhaseMetricsProvider) GetPhaseMetricsBatch(_ context.Context, limit
 	return f.batches[callIndex], nil
 }
 
+func (f *fakePhaseMetricsProvider) GetPhaseMetricsByID(_ context.Context, runID string) ([]entity.PhaseMetrics, error) {
+	f.getByIDCalls = append(f.getByIDCalls, runID)
+	if err, ok := f.phaseMetricsByIDErr[runID]; ok {
+		return nil, err
+	}
+
+	if rows, ok := f.phaseMetricsByID[runID]; ok {
+		return rows, nil
+	}
+
+	return []entity.PhaseMetrics{}, nil
+}
+
 func TestNewExporterService_UsesDefaultParserWhenNil(t *testing.T) {
 	provider := &fakePhaseMetricsProvider{
 		metricKeys: []string{"x"},
@@ -63,7 +87,7 @@ func TestNewExporterService_UsesDefaultParserWhenNil(t *testing.T) {
 		},
 	}
 
-	exporterService := NewExporterService(nil, provider)
+	exporterService := withTempErrorLogPath(t, NewExporterService(nil, provider))
 	if exporterService.parserService == nil {
 		t.Fatalf("parserService should be initialized when nil is passed")
 	}
@@ -104,7 +128,7 @@ func TestExportMeasurementsCSV_Success(t *testing.T) {
 			{},
 		},
 	}
-	exporterService := NewExporterService(NewParserService(), provider)
+	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
 
 	var out bytes.Buffer
 	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 2)
@@ -166,7 +190,7 @@ func TestExportMeasurementsCSV_GetMetricKeysError(t *testing.T) {
 	provider := &fakePhaseMetricsProvider{
 		metricKeysErr: errors.New("boom"),
 	}
-	exporterService := NewExporterService(NewParserService(), provider)
+	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
 
 	var out bytes.Buffer
 	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 2)
@@ -183,7 +207,7 @@ func TestExportMeasurementsCSV_GetPhaseMetricsBatchError(t *testing.T) {
 			0: errors.New("batch failed"),
 		},
 	}
-	exporterService := NewExporterService(NewParserService(), provider)
+	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
 
 	var out bytes.Buffer
 	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 2)
@@ -205,12 +229,72 @@ func TestExportMeasurementsCSV_ParseError(t *testing.T) {
 			},
 		},
 	}
-	exporterService := NewExporterService(NewParserService(), provider)
+	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
 
 	var out bytes.Buffer
 	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 2)
 	if err == nil {
 		t.Fatalf("expected error, got nil")
+	}
+}
+
+func TestExportMeasurementsCSV_UnknownLanguageOrBenchmark_LogsAndContinues(t *testing.T) {
+	logPath := t.TempDir() + "/error_logs.txt"
+	provider := &fakePhaseMetricsProvider{
+		metricKeys: []string{"k"},
+		batches: [][]entity.PhaseMetrics{
+			{
+				{
+					RunID:   "run-1",
+					Phase:   "005_Go-Binary-Trees",
+					Metrics: map[string]int64{"k": 1},
+				},
+				{
+					RunID:   "run-2",
+					Phase:   "005_Pascal-Binary-Trees",
+					Metrics: map[string]int64{"k": 2},
+				},
+				{
+					RunID:   "run-3",
+					Phase:   "005_Go-Binary-Treez",
+					Metrics: map[string]int64{"k": 3},
+				},
+			},
+			{},
+		},
+	}
+	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
+	exporterService.errorLogPath = logPath
+
+	var out bytes.Buffer
+	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 10)
+	if err != nil {
+		t.Fatalf("ExportMeasurementsCSV() error = %v", err)
+	}
+
+	records, err := csv.NewReader(bytes.NewReader(out.Bytes())).ReadAll()
+	if err != nil {
+		t.Fatalf("csv read error = %v", err)
+	}
+
+	want := [][]string{
+		{"run_id", "language", "benchmark", "k"},
+		{"run-1", "go", "binary-trees", "1"},
+	}
+	if !reflect.DeepEqual(records, want) {
+		t.Fatalf("csv records mismatch:\n got=%#v\nwant=%#v", records, want)
+	}
+
+	logData, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("read log file: %v", err)
+	}
+	logText := string(logData)
+	if !strings.Contains(logText, `phase="005_Pascal-Binary-Trees"`) {
+		t.Fatalf("expected unknown language log entry, got %q", logText)
+	}
+	if !strings.Contains(logText, `phase="005_Go-Binary-Treez"`) {
+		t.Fatalf("expected unknown benchmark log entry, got %q", logText)
 	}
 }
 
@@ -224,19 +308,19 @@ func TestExportMeasurementsCSV_InvalidArguments(t *testing.T) {
 		{
 			name:      "nil writer",
 			writer:    nil,
-			service:   NewExporterService(NewParserService(), &fakePhaseMetricsProvider{metricKeys: []string{"k"}}),
+			service:   withTempErrorLogPath(t, NewExporterService(NewParserService(), &fakePhaseMetricsProvider{metricKeys: []string{"k"}})),
 			batchSize: 1,
 		},
 		{
 			name:      "nil provider",
 			writer:    &bytes.Buffer{},
-			service:   NewExporterService(NewParserService(), nil),
+			service:   withTempErrorLogPath(t, NewExporterService(NewParserService(), nil)),
 			batchSize: 1,
 		},
 		{
 			name:      "invalid batch size",
 			writer:    &bytes.Buffer{},
-			service:   NewExporterService(NewParserService(), &fakePhaseMetricsProvider{metricKeys: []string{"k"}}),
+			service:   withTempErrorLogPath(t, NewExporterService(NewParserService(), &fakePhaseMetricsProvider{metricKeys: []string{"k"}})),
 			batchSize: 0,
 		},
 	}
@@ -248,5 +332,243 @@ func TestExportMeasurementsCSV_InvalidArguments(t *testing.T) {
 				t.Fatalf("expected error, got nil")
 			}
 		})
+	}
+}
+
+func TestExportMeasurementsCSVByID_Success(t *testing.T) {
+	const runID = "run-1"
+	provider := &fakePhaseMetricsProvider{
+		metricKeys: []string{
+			"cpu_time_powermetrics_vm-docker_vm-ns",
+			"gpu_carbon_powermetrics_component-component-ug",
+		},
+		phaseMetricsByID: map[string][]entity.PhaseMetrics{
+			runID: {
+				{
+					RunID:   runID,
+					Phase:   "005_Go-Binary-Trees",
+					Metrics: map[string]int64{"cpu_time_powermetrics_vm-docker_vm-ns": 47560725453},
+				},
+				{
+					RunID:   runID,
+					Phase:   "009_python-regex-redux",
+					Metrics: map[string]int64{"gpu_carbon_powermetrics_component-component-ug": 13},
+				},
+			},
+		},
+	}
+	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
+
+	var out bytes.Buffer
+	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID)
+	if err != nil {
+		t.Fatalf("ExportMeasurementsCSVByID() error = %v", err)
+	}
+
+	records, err := csv.NewReader(bytes.NewReader(out.Bytes())).ReadAll()
+	if err != nil {
+		t.Fatalf("csv read error = %v", err)
+	}
+
+	want := [][]string{
+		{
+			"run_id",
+			"language",
+			"benchmark",
+			"cpu_time_powermetrics_vm-docker_vm-ns",
+			"gpu_carbon_powermetrics_component-component-ug",
+		},
+		{
+			"run-1",
+			"go",
+			"binary-trees",
+			"47560725453",
+			"",
+		},
+		{
+			"run-1",
+			"python",
+			"regex-redux",
+			"",
+			"13",
+		},
+	}
+	if !reflect.DeepEqual(records, want) {
+		t.Fatalf("csv records mismatch:\n got=%#v\nwant=%#v", records, want)
+	}
+
+	if !reflect.DeepEqual(provider.getByIDCalls, []string{runID}) {
+		t.Fatalf("get by ID calls mismatch:\n got=%#v\nwant=%#v", provider.getByIDCalls, []string{runID})
+	}
+}
+
+func TestExportMeasurementsCSVByID_GetMetricKeysError(t *testing.T) {
+	provider := &fakePhaseMetricsProvider{
+		metricKeysErr: errors.New("boom"),
+	}
+	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
+
+	var out bytes.Buffer
+	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, "run-1")
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+}
+
+func TestExportMeasurementsCSVByID_GetPhaseMetricsByIDError(t *testing.T) {
+	const runID = "run-1"
+	provider := &fakePhaseMetricsProvider{
+		metricKeys: []string{"k"},
+		phaseMetricsByIDErr: map[string]error{
+			runID: errors.New("load failed"),
+		},
+	}
+	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
+
+	var out bytes.Buffer
+	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID)
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+}
+
+func TestExportMeasurementsCSVByID_ParseError(t *testing.T) {
+	const runID = "run-1"
+	provider := &fakePhaseMetricsProvider{
+		metricKeys: []string{"k"},
+		phaseMetricsByID: map[string][]entity.PhaseMetrics{
+			runID: {
+				{
+					RunID:   runID,
+					Phase:   "invalid-phase",
+					Metrics: map[string]int64{"k": 1},
+				},
+			},
+		},
+	}
+	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
+
+	var out bytes.Buffer
+	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID)
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+}
+
+func TestExportMeasurementsCSVByID_UnknownLanguageOrBenchmark_LogsAndContinues(t *testing.T) {
+	logPath := t.TempDir() + "/error_logs.txt"
+	const runID = "run-1"
+	provider := &fakePhaseMetricsProvider{
+		metricKeys: []string{"k"},
+		phaseMetricsByID: map[string][]entity.PhaseMetrics{
+			runID: {
+				{
+					RunID:   runID,
+					Phase:   "005_Go-Binary-Trees",
+					Metrics: map[string]int64{"k": 1},
+				},
+				{
+					RunID:   runID,
+					Phase:   "005_Pascal-Binary-Trees",
+					Metrics: map[string]int64{"k": 2},
+				},
+				{
+					RunID:   runID,
+					Phase:   "005_Go-Binary-Treez",
+					Metrics: map[string]int64{"k": 3},
+				},
+			},
+		},
+	}
+	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
+	exporterService.errorLogPath = logPath
+
+	var out bytes.Buffer
+	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID)
+	if err != nil {
+		t.Fatalf("ExportMeasurementsCSVByID() error = %v", err)
+	}
+
+	records, err := csv.NewReader(bytes.NewReader(out.Bytes())).ReadAll()
+	if err != nil {
+		t.Fatalf("csv read error = %v", err)
+	}
+
+	want := [][]string{
+		{"run_id", "language", "benchmark", "k"},
+		{"run-1", "go", "binary-trees", "1"},
+	}
+	if !reflect.DeepEqual(records, want) {
+		t.Fatalf("csv records mismatch:\n got=%#v\nwant=%#v", records, want)
+	}
+
+	logData, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("read log file: %v", err)
+	}
+	logText := string(logData)
+	if !strings.Contains(logText, `phase="005_Pascal-Binary-Trees"`) {
+		t.Fatalf("expected unknown language log entry, got %q", logText)
+	}
+	if !strings.Contains(logText, `phase="005_Go-Binary-Treez"`) {
+		t.Fatalf("expected unknown benchmark log entry, got %q", logText)
+	}
+}
+
+func TestExportMeasurementsCSVByID_InvalidArguments(t *testing.T) {
+	testCases := []struct {
+		name    string
+		writer  io.Writer
+		service *ExporterService
+		runID   string
+	}{
+		{
+			name:    "nil writer",
+			writer:  nil,
+			service: withTempErrorLogPath(t, NewExporterService(NewParserService(), &fakePhaseMetricsProvider{metricKeys: []string{"k"}})),
+			runID:   "run-1",
+		},
+		{
+			name:    "nil provider",
+			writer:  &bytes.Buffer{},
+			service: withTempErrorLogPath(t, NewExporterService(NewParserService(), nil)),
+			runID:   "run-1",
+		},
+		{
+			name:    "empty run id",
+			writer:  &bytes.Buffer{},
+			service: withTempErrorLogPath(t, NewExporterService(NewParserService(), &fakePhaseMetricsProvider{metricKeys: []string{"k"}})),
+			runID:   "",
+		},
+		{
+			name:    "blank run id",
+			writer:  &bytes.Buffer{},
+			service: withTempErrorLogPath(t, NewExporterService(NewParserService(), &fakePhaseMetricsProvider{metricKeys: []string{"k"}})),
+			runID:   "   ",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.service.ExportMeasurementsCSVByID(context.Background(), tc.writer, tc.runID)
+			if err == nil {
+				t.Fatalf("expected error, got nil")
+			}
+		})
+	}
+}
+
+func TestOpenErrorLogWriter_CreatesParentDirectory(t *testing.T) {
+	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), &fakePhaseMetricsProvider{}))
+	exporterService.errorLogPath = t.TempDir() + "/nested/logs/error_logs.txt"
+
+	logWriter, err := exporterService.openErrorLogWriter()
+	if err != nil {
+		t.Fatalf("openErrorLogWriter() error = %v", err)
+	}
+	defer logWriter.Close()
+
+	if _, err := os.Stat(exporterService.errorLogPath); err != nil {
+		t.Fatalf("expected log file to exist, got stat error: %v", err)
 	}
 }
