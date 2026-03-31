@@ -216,6 +216,85 @@ func TestExportMeasurementsCSV_GetPhaseMetricsBatchError(t *testing.T) {
 	}
 }
 
+func TestExportMeasurementsCSV_PrefetchNextBatchError(t *testing.T) {
+	provider := &fakePhaseMetricsProvider{
+		metricKeys: []string{"k"},
+		batches: [][]entity.PhaseMetrics{
+			{
+				{
+					RunID:   "run-1",
+					Phase:   "005_Go-Binary-Trees",
+					Metrics: map[string]int64{"k": 1},
+				},
+			},
+		},
+		batchErrAtCall: map[int]error{
+			1: errors.New("batch failed at second call"),
+		},
+	}
+	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
+
+	var out bytes.Buffer
+	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 1)
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "offset 1") {
+		t.Fatalf("expected offset in error message, got %q", err.Error())
+	}
+
+	records, readErr := csv.NewReader(bytes.NewReader(out.Bytes())).ReadAll()
+	if readErr != nil {
+		t.Fatalf("csv read error = %v", readErr)
+	}
+	wantRecords := [][]string{
+		{"run_id", "language", "benchmark", "k"},
+		{"run-1", "go", "binary-trees", "1"},
+	}
+	if !reflect.DeepEqual(records, wantRecords) {
+		t.Fatalf("csv records mismatch:\n got=%#v\nwant=%#v", records, wantRecords)
+	}
+
+	wantBatchCalls := []batchCall{
+		{limit: 1, offset: 0},
+		{limit: 1, offset: 1},
+	}
+	if !reflect.DeepEqual(provider.getBatchCalls, wantBatchCalls) {
+		t.Fatalf("batch calls mismatch:\n got=%#v\nwant=%#v", provider.getBatchCalls, wantBatchCalls)
+	}
+}
+
+func TestExportMeasurementsCSV_StopsAfterTerminalEmptyBatch(t *testing.T) {
+	provider := &fakePhaseMetricsProvider{
+		metricKeys: []string{"k"},
+		batches: [][]entity.PhaseMetrics{
+			{
+				{
+					RunID:   "run-1",
+					Phase:   "005_Go-Binary-Trees",
+					Metrics: map[string]int64{"k": 1},
+				},
+			},
+			{},
+		},
+	}
+	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
+
+	var out bytes.Buffer
+	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 1)
+	if err != nil {
+		t.Fatalf("ExportMeasurementsCSV() error = %v", err)
+	}
+
+	wantBatchCalls := []batchCall{
+		{limit: 1, offset: 0},
+		{limit: 1, offset: 1},
+	}
+	if !reflect.DeepEqual(provider.getBatchCalls, wantBatchCalls) {
+		t.Fatalf("batch calls mismatch:\n got=%#v\nwant=%#v", provider.getBatchCalls, wantBatchCalls)
+	}
+}
+
 func TestExportMeasurementsCSV_ParseError(t *testing.T) {
 	provider := &fakePhaseMetricsProvider{
 		metricKeys: []string{"k"},
