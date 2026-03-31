@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"mthesis/exporter/internal/entity"
+	"mthesis/kwa/internal/entity"
 )
 
 type ExporterService struct {
@@ -31,7 +31,7 @@ type PhaseMetricsBatchProvider interface {
 	GetPhaseMetricsByID(ctx context.Context, runID string) ([]entity.PhaseMetrics, error)
 }
 
-// NewExporterService builds an exporter with parser defaults and data source dependencies.
+// NewExporterService builds an kwa with parser defaults and data source dependencies.
 func NewExporterService(parserService *ParserService, phaseMetricsSource PhaseMetricsBatchProvider) *ExporterService {
 	if parserService == nil {
 		parserService = NewParserService()

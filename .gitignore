@@ -3,8 +3,8 @@
 .DS_Store
 .gocache/
 inputs/fasta-5000000.txt
-/exporter/.env
+/kwa/.env
 /.gomodcache/
 /.gocache_local/
-/exporter/results/
-/exporter/logs/
+/kwa/results/
+/kwa/logs/

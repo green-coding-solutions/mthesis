@@ -8,10 +8,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"mthesis/exporter/internal/api"
-	"mthesis/exporter/internal/config"
-	"mthesis/exporter/internal/data"
-	"mthesis/exporter/internal/service"
+	"mthesis/kwa/internal/api"
+	"mthesis/kwa/internal/config"
+	"mthesis/kwa/internal/data"
+	"mthesis/kwa/internal/service"
 )
 
 func main() {

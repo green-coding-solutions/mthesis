@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"mthesis/exporter/internal/entity"
+	"mthesis/kwa/internal/entity"
 )
 
 type batchCall struct {

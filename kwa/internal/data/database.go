@@ -9,8 +9,8 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
-	"mthesis/exporter/internal/config"
-	"mthesis/exporter/internal/entity"
+	"mthesis/kwa/internal/config"
+	"mthesis/kwa/internal/entity"
 )
 
 type Service interface {
@@ -28,7 +28,7 @@ type service struct {
 	database string
 }
 
-// New opens and validates a PostgreSQL connection for exporter data access.
+// New opens and validates a PostgreSQL connection for kwa data access.
 func New(cfg config.DatabaseConfig) (Service, error) {
 	connStr := fmt.Sprintf(
 		"postgres://%s:%s@%s:%d/%s?sslmode=disable&search_path=%s",

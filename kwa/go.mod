@@ -1,4 +1,4 @@
-module mthesis/exporter
+module mthesis/kwa
 
 go 1.26.0
 

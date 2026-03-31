@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"mthesis/exporter/internal/entity"
+	"mthesis/kwa/internal/entity"
 )
 
 func TestParseMeasurementFromPhase(t *testing.T) {
