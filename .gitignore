@@ -8,3 +8,4 @@ inputs/fasta-5000000.txt
 /.gocache_local/
 /kwa/results/
 /kwa/logs/
+/.agents/
