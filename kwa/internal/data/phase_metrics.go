@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"mthesis/exporter/internal/entity"
+	"mthesis/kwa/internal/entity"
 )
 
 // metricKeyExpression normalizes metric/detail/unit into a deterministic CSV-safe key.

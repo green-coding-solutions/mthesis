@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "skills": {
+    "bubbletea": {
+      "source": "ggprompts/tfe",
+      "sourceType": "github",
+      "computedHash": "a06df850cbd8282da9c362bd5585150119c87032bb07417a141b71b6f0b966ba"
+    },
+    "clean-code": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "14ba8e7d8477723eca6d48a79a1924337f4a1f5f1c7ab9b0a7acc073268ecd5a"
+    },
+    "conventional-commits": {
+      "source": "patricio0312rev/skills",
+      "sourceType": "github",
+      "computedHash": "1a9b826315006b8bf32126c8391f7f11e8ed090b8506f029ccca165cb4f438dc"
+    },
+    "excalidraw-diagram": {
+      "source": "coleam00/excalidraw-diagram-skill",
+      "sourceType": "github",
+      "computedHash": "fc91249969c7c1adc1f810ddfe10f18e206b78609467bb4955248e9138932e8a"
+    },
+    "go-cobra": {
+      "source": "aaronflorey/agent-skills",
+      "sourceType": "github",
+      "computedHash": "688abbf5efa25bd206d5855d90d02d07498934bb3f60707cfcdcebc549fe97c3"
+    },
+    "golang": {
+      "source": "saisudhir14/golang-agent-skill",
+      "sourceType": "github",
+      "computedHash": "015c18f1fdacd779cdd5fa2795e3e088ef57f7a0dc7a5ebe9bb67245b29f8800"
+    },
+    "software-architecture": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "de98595ceee4cf6e97dc88a80f8693a614c10e70170562b692531a60e655d57d"
+    },
+    "testing-patterns": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "a026d53c9111e0861cee7f1a2ea19fa1896a2eb4fd093b51b7dcb6338e7f64c7"
+    }
+  }
+}

@@ -6,7 +6,7 @@ import (
 	"io"
 )
 
-// MeasurementsExporter defines the exporter-service capabilities used by CLI handlers.
+// MeasurementsExporter defines the kwa-service capabilities used by CLI handlers.
 type MeasurementsExporter interface {
 	ExportMeasurementsCSV(ctx context.Context, w io.Writer, batchSize int) error
 	ExportMeasurementsCSVByID(ctx context.Context, w io.Writer, runID string) error
@@ -17,6 +17,7 @@ type CLIHandler struct {
 	exporter MeasurementsExporter
 }
 
+// NewCLIHandler builds the API adapter used by CLI and TUI command flows.
 func NewCLIHandler(exporter MeasurementsExporter) *CLIHandler {
 	return &CLIHandler{exporter: exporter}
 }
@@ -24,7 +25,7 @@ func NewCLIHandler(exporter MeasurementsExporter) *CLIHandler {
 // ExportBatch handles batch CSV export requests from CLI commands.
 func (h *CLIHandler) ExportBatch(ctx context.Context, w io.Writer, batchSize int) error {
 	if h.exporter == nil {
-		return fmt.Errorf("exporter service must not be nil")
+		return fmt.Errorf("kwa service must not be nil")
 	}
 
 	if err := h.exporter.ExportMeasurementsCSV(ctx, w, batchSize); err != nil {
@@ -37,7 +38,7 @@ func (h *CLIHandler) ExportBatch(ctx context.Context, w io.Writer, batchSize int
 // ExportByID handles single-run CSV export requests from CLI commands.
 func (h *CLIHandler) ExportByID(ctx context.Context, w io.Writer, runID string) error {
 	if h.exporter == nil {
-		return fmt.Errorf("exporter service must not be nil")
+		return fmt.Errorf("kwa service must not be nil")
 	}
 
 	if err := h.exporter.ExportMeasurementsCSVByID(ctx, w, runID); err != nil {

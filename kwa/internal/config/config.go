@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// DatabaseConfig holds all required database settings loaded from environment variables.
 type DatabaseConfig struct {
 	Host     string
 	Port     int

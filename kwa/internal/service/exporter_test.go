@@ -5,13 +5,16 @@ import (
 	"context"
 	"encoding/csv"
 	"errors"
+	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
-	"mthesis/exporter/internal/entity"
+	"mthesis/kwa/internal/constant"
+	"mthesis/kwa/internal/entity"
 )
 
 type batchCall struct {
@@ -33,7 +36,7 @@ type fakePhaseMetricsProvider struct {
 
 func withTempErrorLogPath(t *testing.T, exporterService *ExporterService) *ExporterService {
 	t.Helper()
-	exporterService.errorLogPath = t.TempDir() + "/logs/error_logs.txt"
+	exporterService.errorLogPath = filepath.Join(t.TempDir(), "logs", "error_logs.txt")
 	return exporterService
 }
 
@@ -216,6 +219,85 @@ func TestExportMeasurementsCSV_GetPhaseMetricsBatchError(t *testing.T) {
 	}
 }
 
+func TestExportMeasurementsCSV_PrefetchNextBatchError(t *testing.T) {
+	provider := &fakePhaseMetricsProvider{
+		metricKeys: []string{"k"},
+		batches: [][]entity.PhaseMetrics{
+			{
+				{
+					RunID:   "run-1",
+					Phase:   "005_Go-Binary-Trees",
+					Metrics: map[string]int64{"k": 1},
+				},
+			},
+		},
+		batchErrAtCall: map[int]error{
+			1: errors.New("batch failed at second call"),
+		},
+	}
+	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
+
+	var out bytes.Buffer
+	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 1)
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "offset 1") {
+		t.Fatalf("expected offset in error message, got %q", err.Error())
+	}
+
+	records, readErr := csv.NewReader(bytes.NewReader(out.Bytes())).ReadAll()
+	if readErr != nil {
+		t.Fatalf("csv read error = %v", readErr)
+	}
+	wantRecords := [][]string{
+		{"run_id", "language", "benchmark", "k"},
+		{"run-1", "go", "binary-trees", "1"},
+	}
+	if !reflect.DeepEqual(records, wantRecords) {
+		t.Fatalf("csv records mismatch:\n got=%#v\nwant=%#v", records, wantRecords)
+	}
+
+	wantBatchCalls := []batchCall{
+		{limit: 1, offset: 0},
+		{limit: 1, offset: 1},
+	}
+	if !reflect.DeepEqual(provider.getBatchCalls, wantBatchCalls) {
+		t.Fatalf("batch calls mismatch:\n got=%#v\nwant=%#v", provider.getBatchCalls, wantBatchCalls)
+	}
+}
+
+func TestExportMeasurementsCSV_StopsAfterTerminalEmptyBatch(t *testing.T) {
+	provider := &fakePhaseMetricsProvider{
+		metricKeys: []string{"k"},
+		batches: [][]entity.PhaseMetrics{
+			{
+				{
+					RunID:   "run-1",
+					Phase:   "005_Go-Binary-Trees",
+					Metrics: map[string]int64{"k": 1},
+				},
+			},
+			{},
+		},
+	}
+	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
+
+	var out bytes.Buffer
+	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 1)
+	if err != nil {
+		t.Fatalf("ExportMeasurementsCSV() error = %v", err)
+	}
+
+	wantBatchCalls := []batchCall{
+		{limit: 1, offset: 0},
+		{limit: 1, offset: 1},
+	}
+	if !reflect.DeepEqual(provider.getBatchCalls, wantBatchCalls) {
+		t.Fatalf("batch calls mismatch:\n got=%#v\nwant=%#v", provider.getBatchCalls, wantBatchCalls)
+	}
+}
+
 func TestExportMeasurementsCSV_ParseError(t *testing.T) {
 	provider := &fakePhaseMetricsProvider{
 		metricKeys: []string{"k"},
@@ -239,7 +321,7 @@ func TestExportMeasurementsCSV_ParseError(t *testing.T) {
 }
 
 func TestExportMeasurementsCSV_UnknownLanguageOrBenchmark_LogsAndContinues(t *testing.T) {
-	logPath := t.TempDir() + "/error_logs.txt"
+	logPath := filepath.Join(t.TempDir(), "error_logs.txt")
 	provider := &fakePhaseMetricsProvider{
 		metricKeys: []string{"k"},
 		batches: [][]entity.PhaseMetrics{
@@ -456,7 +538,7 @@ func TestExportMeasurementsCSVByID_ParseError(t *testing.T) {
 }
 
 func TestExportMeasurementsCSVByID_UnknownLanguageOrBenchmark_LogsAndContinues(t *testing.T) {
-	logPath := t.TempDir() + "/error_logs.txt"
+	logPath := filepath.Join(t.TempDir(), "error_logs.txt")
 	const runID = "run-1"
 	provider := &fakePhaseMetricsProvider{
 		metricKeys: []string{"k"},
@@ -560,7 +642,7 @@ func TestExportMeasurementsCSVByID_InvalidArguments(t *testing.T) {
 
 func TestOpenErrorLogWriter_CreatesParentDirectory(t *testing.T) {
 	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), &fakePhaseMetricsProvider{}))
-	exporterService.errorLogPath = t.TempDir() + "/nested/logs/error_logs.txt"
+	exporterService.errorLogPath = filepath.Join(t.TempDir(), "nested", "logs", "error_logs.txt")
 
 	logWriter, err := exporterService.openErrorLogWriter()
 	if err != nil {
@@ -570,5 +652,19 @@ func TestOpenErrorLogWriter_CreatesParentDirectory(t *testing.T) {
 
 	if _, err := os.Stat(exporterService.errorLogPath); err != nil {
 		t.Fatalf("expected log file to exist, got stat error: %v", err)
+	}
+}
+
+func TestIsUnknownDimensionError_UsesSentinelErrors(t *testing.T) {
+	t.Parallel()
+
+	if !isUnknownDimensionError(fmt.Errorf("wrapped: %w", constant.ErrUnknownProgrammingLanguage)) {
+		t.Fatalf("expected unknown language sentinel to be recognized")
+	}
+	if !isUnknownDimensionError(fmt.Errorf("wrapped: %w", constant.ErrUnknownBenchmark)) {
+		t.Fatalf("expected unknown benchmark sentinel to be recognized")
+	}
+	if isUnknownDimensionError(errors.New("unknown programming language: \"pascal\"")) {
+		t.Fatalf("expected plain string error not to match sentinel-based detection")
 	}
 }

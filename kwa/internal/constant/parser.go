@@ -1,9 +1,16 @@
 package constant
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
+
+// ErrUnknownBenchmark is returned when a benchmark token cannot be mapped.
+var ErrUnknownBenchmark = errors.New("unknown benchmark")
+
+// ErrUnknownProgrammingLanguage is returned when a language token cannot be mapped.
+var ErrUnknownProgrammingLanguage = errors.New("unknown programming language")
 
 // ParseBenchmark normalizes free-form benchmark tokens and maps them to the
 // canonical benchmark enum value.
@@ -11,7 +18,7 @@ func ParseBenchmark(value string) (Benchmark, error) {
 	normalized := normalizeEnumToken(value)
 	benchmark, ok := benchmarkByNormalized[normalized]
 	if !ok {
-		return "", fmt.Errorf("unknown benchmark: %q", value)
+		return "", fmt.Errorf("%w: %q", ErrUnknownBenchmark, value)
 	}
 	return benchmark, nil
 }
@@ -22,7 +29,7 @@ func ParseProgrammingLanguage(value string) (ProgrammingLanguage, error) {
 	normalized := normalizeEnumToken(value)
 	language, ok := languageByNormalized[normalized]
 	if !ok {
-		return "", fmt.Errorf("unknown programming language: %q", value)
+		return "", fmt.Errorf("%w: %q", ErrUnknownProgrammingLanguage, value)
 	}
 	return language, nil
 }

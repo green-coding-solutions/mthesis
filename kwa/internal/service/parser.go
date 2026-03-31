@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"strings"
 
-	"mthesis/exporter/internal/constant"
-	"mthesis/exporter/internal/entity"
+	"mthesis/kwa/internal/constant"
+	"mthesis/kwa/internal/entity"
 )
 
 // ParserService converts raw phase identifiers into canonical measurement dimensions.
 type ParserService struct{}
 
+// NewParserService creates a parser that maps raw phase tokens into canonical dimensions.
 func NewParserService() *ParserService {
 	return &ParserService{}
 }
