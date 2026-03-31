@@ -18,7 +18,7 @@ The CLI uses `internal/config` and `internal/data` to connect to your database, 
 
 ## Build and Run
 
-From `/Users/brandao/mthesis/kwa`:
+From `mthesis/kwa`:
 
 ```bash
 go build -o kwa ./cmd

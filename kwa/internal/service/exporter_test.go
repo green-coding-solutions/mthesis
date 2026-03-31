@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -35,7 +36,7 @@ type fakePhaseMetricsProvider struct {
 
 func withTempErrorLogPath(t *testing.T, exporterService *ExporterService) *ExporterService {
 	t.Helper()
-	exporterService.errorLogPath = t.TempDir() + "/logs/error_logs.txt"
+	exporterService.errorLogPath = filepath.Join(t.TempDir(), "logs", "error_logs.txt")
 	return exporterService
 }
 
@@ -320,7 +321,7 @@ func TestExportMeasurementsCSV_ParseError(t *testing.T) {
 }
 
 func TestExportMeasurementsCSV_UnknownLanguageOrBenchmark_LogsAndContinues(t *testing.T) {
-	logPath := t.TempDir() + "/error_logs.txt"
+	logPath := filepath.Join(t.TempDir(), "error_logs.txt")
 	provider := &fakePhaseMetricsProvider{
 		metricKeys: []string{"k"},
 		batches: [][]entity.PhaseMetrics{
@@ -537,7 +538,7 @@ func TestExportMeasurementsCSVByID_ParseError(t *testing.T) {
 }
 
 func TestExportMeasurementsCSVByID_UnknownLanguageOrBenchmark_LogsAndContinues(t *testing.T) {
-	logPath := t.TempDir() + "/error_logs.txt"
+	logPath := filepath.Join(t.TempDir(), "error_logs.txt")
 	const runID = "run-1"
 	provider := &fakePhaseMetricsProvider{
 		metricKeys: []string{"k"},
@@ -641,7 +642,7 @@ func TestExportMeasurementsCSVByID_InvalidArguments(t *testing.T) {
 
 func TestOpenErrorLogWriter_CreatesParentDirectory(t *testing.T) {
 	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), &fakePhaseMetricsProvider{}))
-	exporterService.errorLogPath = t.TempDir() + "/nested/logs/error_logs.txt"
+	exporterService.errorLogPath = filepath.Join(t.TempDir(), "nested", "logs", "error_logs.txt")
 
 	logWriter, err := exporterService.openErrorLogWriter()
 	if err != nil {
