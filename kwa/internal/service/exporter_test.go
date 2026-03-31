@@ -5,12 +5,14 @@ import (
 	"context"
 	"encoding/csv"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
 
+	"mthesis/kwa/internal/constant"
 	"mthesis/kwa/internal/entity"
 )
 
@@ -649,5 +651,19 @@ func TestOpenErrorLogWriter_CreatesParentDirectory(t *testing.T) {
 
 	if _, err := os.Stat(exporterService.errorLogPath); err != nil {
 		t.Fatalf("expected log file to exist, got stat error: %v", err)
+	}
+}
+
+func TestIsUnknownDimensionError_UsesSentinelErrors(t *testing.T) {
+	t.Parallel()
+
+	if !isUnknownDimensionError(fmt.Errorf("wrapped: %w", constant.ErrUnknownProgrammingLanguage)) {
+		t.Fatalf("expected unknown language sentinel to be recognized")
+	}
+	if !isUnknownDimensionError(fmt.Errorf("wrapped: %w", constant.ErrUnknownBenchmark)) {
+		t.Fatalf("expected unknown benchmark sentinel to be recognized")
+	}
+	if isUnknownDimensionError(errors.New("unknown programming language: \"pascal\"")) {
+		t.Fatalf("expected plain string error not to match sentinel-based detection")
 	}
 }

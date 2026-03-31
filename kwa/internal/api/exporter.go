@@ -17,6 +17,7 @@ type CLIHandler struct {
 	exporter MeasurementsExporter
 }
 
+// NewCLIHandler builds the API adapter used by CLI and TUI command flows.
 func NewCLIHandler(exporter MeasurementsExporter) *CLIHandler {
 	return &CLIHandler{exporter: exporter}
 }

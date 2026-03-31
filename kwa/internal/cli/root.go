@@ -6,15 +6,26 @@ import (
 	"io"
 	"os"
 
+	appexport "mthesis/kwa/internal/app/export"
+	"mthesis/kwa/internal/constant"
+
 	"github.com/spf13/cobra"
 )
 
-type interactiveRunner func(ctx context.Context, execute ExportExecutor, stdout, stderr io.Writer) error
+type interactiveRunner func(
+	ctx context.Context,
+	execute executeRequestFunc,
+	stdout io.Writer,
+	stderr io.Writer,
+) error
 
 type rootDependencies struct {
-	execute ExportExecutor
+	execute executeRequestFunc
 	runTUI  interactiveRunner
 }
+
+// executeRequestFunc bridges CLI/TUI input handling with application execution.
+type executeRequestFunc func(context.Context, appexport.Request) error
 
 // Execute runs the Cobra root command and exits with code 1 on command errors.
 func Execute() {
@@ -26,15 +37,16 @@ func Execute() {
 }
 
 func defaultDependencies() rootDependencies {
+	executor := appexport.NewExecutor()
 	return rootDependencies{
-		execute: runExport,
+		execute: executor.Execute,
 		runTUI:  runInteractive,
 	}
 }
 
 func newRootCmd(deps rootDependencies) *cobra.Command {
 	if deps.execute == nil {
-		deps.execute = runExport
+		deps.execute = appexport.NewExecutor().Execute
 	}
 	if deps.runTUI == nil {
 		deps.runTUI = runInteractive
@@ -57,7 +69,7 @@ func newRootCmd(deps rootDependencies) *cobra.Command {
 	return rootCmd
 }
 
-func newBatchCmd(execute ExportExecutor) *cobra.Command {
+func newBatchCmd(execute executeRequestFunc) *cobra.Command {
 	var (
 		batchSize int
 		outPath   string
@@ -67,8 +79,8 @@ func newBatchCmd(execute ExportExecutor) *cobra.Command {
 		Use:   "batch",
 		Short: "Export measurements in paginated batches",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			req := ExportRequest{
-				Mode:      ExportModeBatch,
+			req := appexport.Request{
+				Mode:      constant.ExportModeBatch,
 				BatchSize: batchSize,
 				OutPath:   outPath,
 			}
@@ -81,12 +93,12 @@ func newBatchCmd(execute ExportExecutor) *cobra.Command {
 		},
 	}
 
-	batchCmd.Flags().IntVar(&batchSize, "batch-size", DefaultBatchSize, "rows per batch")
-	batchCmd.Flags().StringVar(&outPath, "out", DefaultOutPath, "output CSV file path")
+	batchCmd.Flags().IntVar(&batchSize, "batch-size", constant.DefaultBatchSize, "rows per batch")
+	batchCmd.Flags().StringVar(&outPath, "out", constant.DefaultOutPath, "output CSV file path")
 	return batchCmd
 }
 
-func newByIDCmd(execute ExportExecutor) *cobra.Command {
+func newByIDCmd(execute executeRequestFunc) *cobra.Command {
 	var (
 		runID   string
 		outPath string
@@ -97,8 +109,8 @@ func newByIDCmd(execute ExportExecutor) *cobra.Command {
 		Aliases: []string{"byID"},
 		Short:   "Export measurements for one run ID",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			req := ExportRequest{
-				Mode:    ExportModeByID,
+			req := appexport.Request{
+				Mode:    constant.ExportModeByID,
 				RunID:   runID,
 				OutPath: outPath,
 			}
@@ -112,7 +124,7 @@ func newByIDCmd(execute ExportExecutor) *cobra.Command {
 	}
 
 	byIDCmd.Flags().StringVar(&runID, "run-id", "", "run ID to export")
-	byIDCmd.Flags().StringVar(&outPath, "out", DefaultOutPath, "output CSV file path")
+	byIDCmd.Flags().StringVar(&outPath, "out", constant.DefaultOutPath, "output CSV file path")
 	_ = byIDCmd.MarkFlagRequired("run-id")
 
 	return byIDCmd

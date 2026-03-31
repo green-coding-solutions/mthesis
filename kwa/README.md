@@ -28,13 +28,12 @@ go build -o kwa ./cmd
 ## Interactive Mode (`kwa`)
 
 Running `kwa` with no subcommand:
-1. Prints the bat logo.
-2. Opens a TUI menu with two options:
+1. Opens a TUI menu with the bat logo and two options:
    - `batch export`
    - `byID`
-3. Prompts for mode-specific fields.
-4. Executes the export.
-5. Shows a result screen with the output path and waits for `q` to exit.
+2. Prompts for mode-specific fields.
+3. Executes the export.
+4. Shows a result screen with the output path and waits for `q` to exit.
 
 ### Interactive Inputs
 

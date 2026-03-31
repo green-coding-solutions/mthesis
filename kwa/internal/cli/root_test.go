@@ -6,18 +6,21 @@ import (
 	"io"
 	"strings"
 	"testing"
+
+	appexport "mthesis/kwa/internal/app/export"
+	"mthesis/kwa/internal/constant"
 )
 
 func TestBatchCommandDispatchesRequest(t *testing.T) {
 	t.Parallel()
 
-	var got ExportRequest
+	var got appexport.Request
 	deps := rootDependencies{
-		execute: func(_ context.Context, req ExportRequest) error {
+		execute: func(_ context.Context, req appexport.Request) error {
 			got = req
 			return nil
 		},
-		runTUI: func(context.Context, ExportExecutor, io.Writer, io.Writer) error { return nil },
+		runTUI: func(context.Context, executeRequestFunc, io.Writer, io.Writer) error { return nil },
 	}
 
 	cmd := newRootCmd(deps)
@@ -30,8 +33,8 @@ func TestBatchCommandDispatchesRequest(t *testing.T) {
 		t.Fatalf("execute batch command: %v", err)
 	}
 
-	if got.Mode != ExportModeBatch {
-		t.Fatalf("mode = %q, want %q", got.Mode, ExportModeBatch)
+	if got.Mode != constant.ExportModeBatch {
+		t.Fatalf("mode = %q, want %q", got.Mode, constant.ExportModeBatch)
 	}
 	if got.BatchSize != 250 {
 		t.Fatalf("batch size = %d, want 250", got.BatchSize)
@@ -47,13 +50,13 @@ func TestBatchCommandDispatchesRequest(t *testing.T) {
 func TestBatchCommandUsesDefaults(t *testing.T) {
 	t.Parallel()
 
-	var got ExportRequest
+	var got appexport.Request
 	deps := rootDependencies{
-		execute: func(_ context.Context, req ExportRequest) error {
+		execute: func(_ context.Context, req appexport.Request) error {
 			got = req
 			return nil
 		},
-		runTUI: func(context.Context, ExportExecutor, io.Writer, io.Writer) error { return nil },
+		runTUI: func(context.Context, executeRequestFunc, io.Writer, io.Writer) error { return nil },
 	}
 
 	cmd := newRootCmd(deps)
@@ -65,11 +68,11 @@ func TestBatchCommandUsesDefaults(t *testing.T) {
 		t.Fatalf("execute batch command with defaults: %v", err)
 	}
 
-	if got.BatchSize != DefaultBatchSize {
-		t.Fatalf("batch size default = %d, want %d", got.BatchSize, DefaultBatchSize)
+	if got.BatchSize != constant.DefaultBatchSize {
+		t.Fatalf("batch size default = %d, want %d", got.BatchSize, constant.DefaultBatchSize)
 	}
-	if got.OutPath != DefaultOutPath {
-		t.Fatalf("out path default = %q, want %q", got.OutPath, DefaultOutPath)
+	if got.OutPath != constant.DefaultOutPath {
+		t.Fatalf("out path default = %q, want %q", got.OutPath, constant.DefaultOutPath)
 	}
 }
 
@@ -77,8 +80,8 @@ func TestByIDRequiresRunID(t *testing.T) {
 	t.Parallel()
 
 	deps := rootDependencies{
-		execute: func(_ context.Context, _ ExportRequest) error { return nil },
-		runTUI:  func(context.Context, ExportExecutor, io.Writer, io.Writer) error { return nil },
+		execute: func(_ context.Context, _ appexport.Request) error { return nil },
+		runTUI:  func(context.Context, executeRequestFunc, io.Writer, io.Writer) error { return nil },
 	}
 
 	cmd := newRootCmd(deps)
@@ -98,13 +101,13 @@ func TestByIDRequiresRunID(t *testing.T) {
 func TestByIDAliasDispatchesRequest(t *testing.T) {
 	t.Parallel()
 
-	var got ExportRequest
+	var got appexport.Request
 	deps := rootDependencies{
-		execute: func(_ context.Context, req ExportRequest) error {
+		execute: func(_ context.Context, req appexport.Request) error {
 			got = req
 			return nil
 		},
-		runTUI: func(context.Context, ExportExecutor, io.Writer, io.Writer) error { return nil },
+		runTUI: func(context.Context, executeRequestFunc, io.Writer, io.Writer) error { return nil },
 	}
 
 	cmd := newRootCmd(deps)
@@ -116,14 +119,14 @@ func TestByIDAliasDispatchesRequest(t *testing.T) {
 		t.Fatalf("execute byID alias: %v", err)
 	}
 
-	if got.Mode != ExportModeByID {
-		t.Fatalf("mode = %q, want %q", got.Mode, ExportModeByID)
+	if got.Mode != constant.ExportModeByID {
+		t.Fatalf("mode = %q, want %q", got.Mode, constant.ExportModeByID)
 	}
 	if got.RunID != "run-42" {
 		t.Fatalf("run ID = %q, want %q", got.RunID, "run-42")
 	}
-	if got.OutPath != DefaultOutPath {
-		t.Fatalf("out path default = %q, want %q", got.OutPath, DefaultOutPath)
+	if got.OutPath != constant.DefaultOutPath {
+		t.Fatalf("out path default = %q, want %q", got.OutPath, constant.DefaultOutPath)
 	}
 }
 
@@ -133,8 +136,8 @@ func TestRootLaunchesTUI(t *testing.T) {
 	var launched bool
 
 	deps := rootDependencies{
-		execute: func(_ context.Context, _ ExportRequest) error { return nil },
-		runTUI: func(_ context.Context, _ ExportExecutor, _ io.Writer, _ io.Writer) error {
+		execute: func(_ context.Context, _ appexport.Request) error { return nil },
+		runTUI: func(_ context.Context, _ executeRequestFunc, _ io.Writer, _ io.Writer) error {
 			launched = true
 			return nil
 		},

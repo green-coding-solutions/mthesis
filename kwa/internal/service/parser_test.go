@@ -1,9 +1,11 @@
 package service
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 
+	"mthesis/kwa/internal/constant"
 	"mthesis/kwa/internal/entity"
 )
 
@@ -123,5 +125,29 @@ func TestParseMeasurementFromPhase_ClonesMetricsMap(t *testing.T) {
 	}
 	if got.RunID != "run-clone" {
 		t.Fatalf("run_id mismatch: got %q want %q", got.RunID, "run-clone")
+	}
+}
+
+func TestParseMeasurementFromPhase_UnknownDimensionErrorsAreTyped(t *testing.T) {
+	parserService := NewParserService()
+
+	_, err := parserService.ParseMeasurementFromPhase(entity.PhaseMetrics{
+		Phase: "005_Pascal-Binary-Trees",
+	})
+	if err == nil {
+		t.Fatalf("expected unknown language error, got nil")
+	}
+	if !errors.Is(err, constant.ErrUnknownProgrammingLanguage) {
+		t.Fatalf("expected ErrUnknownProgrammingLanguage, got %v", err)
+	}
+
+	_, err = parserService.ParseMeasurementFromPhase(entity.PhaseMetrics{
+		Phase: "005_Go-Binary-Treez",
+	})
+	if err == nil {
+		t.Fatalf("expected unknown benchmark error, got nil")
+	}
+	if !errors.Is(err, constant.ErrUnknownBenchmark) {
+		t.Fatalf("expected ErrUnknownBenchmark, got %v", err)
 	}
 }

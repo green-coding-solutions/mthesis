@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -10,9 +11,11 @@ import (
 	"strconv"
 	"strings"
 
+	"mthesis/kwa/internal/constant"
 	"mthesis/kwa/internal/entity"
 )
 
+// ExporterService streams normalized measurements to CSV files.
 type ExporterService struct {
 	parserService      *ParserService
 	phaseMetricsSource PhaseMetricsBatchProvider
@@ -31,7 +34,7 @@ type PhaseMetricsBatchProvider interface {
 	GetPhaseMetricsByID(ctx context.Context, runID string) ([]entity.PhaseMetrics, error)
 }
 
-// NewExporterService builds an kwa with parser defaults and data source dependencies.
+// NewExporterService builds an exporter service with parser defaults and data source dependencies.
 func NewExporterService(parserService *ParserService, phaseMetricsSource PhaseMetricsBatchProvider) *ExporterService {
 	if parserService == nil {
 		parserService = NewParserService()
@@ -234,8 +237,7 @@ func flushCSV(csvWriter *csv.Writer) error {
 
 // isUnknownDimensionError reports whether parsing failed due to unknown lookup dimensions.
 func isUnknownDimensionError(err error) bool {
-	msg := err.Error()
-	return strings.Contains(msg, "unknown programming language:") || strings.Contains(msg, "unknown benchmark:")
+	return errors.Is(err, constant.ErrUnknownProgrammingLanguage) || errors.Is(err, constant.ErrUnknownBenchmark)
 }
 
 // logSkippedPhase records skipped phase context when parsing cannot map dimensions.

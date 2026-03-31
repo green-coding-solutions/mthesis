@@ -6,34 +6,37 @@ import (
 	"strings"
 	"testing"
 
+	appexport "mthesis/kwa/internal/app/export"
+	"mthesis/kwa/internal/constant"
+
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 func TestMenuEnterStartsBatchForm(t *testing.T) {
 	t.Parallel()
 
-	m := newModel(context.Background(), func(context.Context, ExportRequest) error { return nil })
+	m := newModel(context.Background(), func(context.Context, appexport.Request) error { return nil })
 	nextModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	updated := nextModel.(model)
 
 	if updated.state != screenForm {
 		t.Fatalf("state = %v, want %v", updated.state, screenForm)
 	}
-	if updated.formMode != ExportModeBatch {
-		t.Fatalf("form mode = %q, want %q", updated.formMode, ExportModeBatch)
+	if updated.formMode != constant.ExportModeBatch {
+		t.Fatalf("form mode = %q, want %q", updated.formMode, constant.ExportModeBatch)
 	}
 }
 
 func TestMenuDownEnterStartsByIDForm(t *testing.T) {
 	t.Parallel()
 
-	m := newModel(context.Background(), func(context.Context, ExportRequest) error { return nil })
+	m := newModel(context.Background(), func(context.Context, appexport.Request) error { return nil })
 	moved, _ := m.Update(tea.KeyMsg{Type: tea.KeyDown})
 	nextModel, _ := moved.(model).Update(tea.KeyMsg{Type: tea.KeyEnter})
 	updated := nextModel.(model)
 
-	if updated.formMode != ExportModeByID {
-		t.Fatalf("form mode = %q, want %q", updated.formMode, ExportModeByID)
+	if updated.formMode != constant.ExportModeByID {
+		t.Fatalf("form mode = %q, want %q", updated.formMode, constant.ExportModeByID)
 	}
 	if updated.state != screenForm {
 		t.Fatalf("state = %v, want %v", updated.state, screenForm)
@@ -43,7 +46,7 @@ func TestMenuDownEnterStartsByIDForm(t *testing.T) {
 func TestMenuViewContainsBatLogo(t *testing.T) {
 	t.Parallel()
 
-	m := newModel(context.Background(), func(context.Context, ExportRequest) error { return nil })
+	m := newModel(context.Background(), func(context.Context, appexport.Request) error { return nil })
 	view := m.View()
 	if !strings.Contains(view, "_.''._'--(.)--'_.''._") {
 		t.Fatalf("expected menu view to contain bat logo")
@@ -53,8 +56,8 @@ func TestMenuViewContainsBatLogo(t *testing.T) {
 func TestBuildRequestFromFormValidationAndDefaults(t *testing.T) {
 	t.Parallel()
 
-	batchModel := newModel(context.Background(), func(context.Context, ExportRequest) error { return nil })
-	batchModel.initForm(ExportModeBatch)
+	batchModel := newModel(context.Background(), func(context.Context, appexport.Request) error { return nil })
+	batchModel.initForm(constant.ExportModeBatch)
 	batchModel.fields[0].value = ""
 	batchModel.fields[1].value = "custom-file"
 
@@ -62,8 +65,8 @@ func TestBuildRequestFromFormValidationAndDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatalf("buildRequestFromForm() batch: %v", err)
 	}
-	if req.BatchSize != DefaultBatchSize {
-		t.Fatalf("batch size = %d, want %d", req.BatchSize, DefaultBatchSize)
+	if req.BatchSize != constant.DefaultBatchSize {
+		t.Fatalf("batch size = %d, want %d", req.BatchSize, constant.DefaultBatchSize)
 	}
 	if req.OutPath != "results/custom-file.csv" {
 		t.Fatalf("out path = %q, want %q", req.OutPath, "results/custom-file.csv")
@@ -74,8 +77,8 @@ func TestBuildRequestFromFormValidationAndDefaults(t *testing.T) {
 		t.Fatalf("expected invalid batch size error, got nil")
 	}
 
-	byIDModel := newModel(context.Background(), func(context.Context, ExportRequest) error { return nil })
-	byIDModel.initForm(ExportModeByID)
+	byIDModel := newModel(context.Background(), func(context.Context, appexport.Request) error { return nil })
+	byIDModel.initForm(constant.ExportModeByID)
 	byIDModel.fields[0].value = ""
 	if _, err := byIDModel.buildRequestFromForm(); err == nil {
 		t.Fatalf("expected missing run ID error, got nil")
@@ -95,7 +98,7 @@ func TestBuildRequestFromFormValidationAndDefaults(t *testing.T) {
 func TestResultViewContainsOutputPath(t *testing.T) {
 	t.Parallel()
 
-	m := newModel(context.Background(), func(context.Context, ExportRequest) error { return nil })
+	m := newModel(context.Background(), func(context.Context, appexport.Request) error { return nil })
 	m.state = screenRunning
 
 	nextModel, _ := m.Update(exportDoneMsg{path: "results/measurements.csv"})
@@ -112,7 +115,7 @@ func TestResultViewContainsOutputPath(t *testing.T) {
 func TestInteractiveReturnsFinalError(t *testing.T) {
 	t.Parallel()
 
-	m := newModel(context.Background(), func(context.Context, ExportRequest) error { return nil })
+	m := newModel(context.Background(), func(context.Context, appexport.Request) error { return nil })
 	m.state = screenResult
 	expectedErr := errors.New("export failed")
 	m.finalErr = expectedErr

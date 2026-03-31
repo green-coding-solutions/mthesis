@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+const defaultCSVFilename = "measurements.csv"
+
 // buildOutputPath applies the interactive filename rules and returns the final path.
 // Rule order:
 // 1) Empty input falls back to measurements.csv.
@@ -24,7 +26,7 @@ func buildOutputPath(input string) string {
 func normalizeCSVFilename(input string) string {
 	trimmed := strings.TrimSpace(input)
 	if trimmed == "" {
-		return DefaultCSVFilename
+		return defaultCSVFilename
 	}
 	if strings.HasSuffix(strings.ToLower(trimmed), ".csv") {
 		return trimmed
