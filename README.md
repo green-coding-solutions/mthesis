@@ -26,6 +26,46 @@ Important notes:
 - If `./green-metrics-tool` already exists, setup prompts whether to overwrite it.
 - DB defaults are sourced from `kwa/.env.example` (notably `DATABASE_PASSWORD`).
 
+## Uninstall
+
+Use `make uninstall` for safe local teardown:
+
+```bash
+make uninstall
+```
+
+`make uninstall`:
+
+- always asks whether to remove DB/data volume
+- stops/removes GMT containers (best effort)
+- runs `docker system prune` (best effort)
+- removes local artifacts:
+  - `kwa/build`
+  - `.gocache`
+  - `.gocache_local`
+  - `.gomodcache`
+  - `./green-metrics-tool`
+- prompts (Linux) whether to remove pre-install requirements and Docker packages
+
+Notes:
+
+- This uninstall flow is Linux-oriented and destructive.
+- `sudo` may be required for package/sudoers cleanup.
+
+## KWA Build/Run
+
+Build KWA binary into `kwa/build/kwa`:
+
+```bash
+make kwa-build
+```
+
+Run KWA directly from source (`kwa/cmd/main.go`):
+
+```bash
+make kwa-run
+```
+
 ## Run Benchmarks
 
 Use `make measure` (wrapper around `scripts/measure.sh`):
