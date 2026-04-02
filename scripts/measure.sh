@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DEFAULT_GMT_DIR="/Users/brandao/green-metrics-tool"
-DEFAULT_URI="/Users/brandao/mthesis"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+DEFAULT_GMT_DIR="${REPO_ROOT}/green-metrics-tool"
+DEFAULT_URI="${REPO_ROOT}"
 
 LANGUAGES=(c cpp csharp dart erlang fsharp go haskell java lua nodejs ocaml perl php python ruby rust swift)
 BENCHMARKS=(binary-trees fannkuch-redux k-nucleotide n-body regex-redux spectral-norm fasta mandelbrot)
@@ -175,21 +177,18 @@ if [ "$profile" = "test" ]; then
   run_name="${run_name}-test"
 fi
 
-venv_activate="${gmt_dir%/}/venv/bin/activate"
+venv_python="${gmt_dir%/}/venv/bin/python3"
 runner_py="${gmt_dir%/}/runner.py"
 
-if [ ! -f "$venv_activate" ]; then
-  die "Missing GMT virtualenv activate script: $venv_activate"
+if [ ! -x "$venv_python" ]; then
+  die "Missing GMT venv python executable: $venv_python"
 fi
 
 if [ ! -f "$runner_py" ]; then
   die "Missing GMT runner.py: $runner_py"
 fi
 
-# shellcheck disable=SC1090
-source "$venv_activate"
-
-runner_cmd=(python3 "$runner_py" --uri "$uri" --name "$run_name")
+runner_cmd=("$venv_python" "$runner_py" --uri "$uri" --name "$run_name")
 runner_cmd+=("${filename_args[@]}")
 
 if [ "$profile" = "test" ]; then

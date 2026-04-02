@@ -1,4 +1,7 @@
-.PHONY: measure
+.PHONY: setup measure
+
+setup:
+	./scripts/setup.sh
 
 # Main benchmark target delegates to scripts/measure.sh.
 measure:

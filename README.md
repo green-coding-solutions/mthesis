@@ -1,23 +1,32 @@
 # Towards a More Accurate Understanding of Programming Language Energy Efficiency
 
-## Local Testing
+## Linux Setup (Ubuntu 22.04/24.04)
 
-This repository is wired to run with a local Green Metrics Tool installation.
+Use `make setup` to bootstrap the full local environment (Linux only):
 
-### Prerequisites
+```bash
+make setup
+```
 
-- Green Metrics Tool cloned locally from [green-metrics-tool](https://github.com/green-coding-solutions/green-metrics-tool) (default in `Makefile`: `/Users/brandao/green-metrics-tool`)
-- GMT Python virtual environment available at `$(GMT_DIR)/venv`
-- Docker running
+`make setup`:
 
-### Configure paths
+- checks/install required base tools (`git`, `curl`, `make`, `gcc`, etc.)
+- installs Docker if missing and enables the daemon
+- installs/ensures Python `3.12`
+- installs/ensures the Go version required by `kwa/go.mod`
+- clones GMT into this repo at `./green-metrics-tool`
+- runs GMT `install_linux.sh` non-interactively with local URLs
+- attempts full metric-provider dependency setup, retrying with best-effort fallbacks for hardware-specific providers if needed
 
-Check these variables in `Makefile` and adjust if your paths differ:
+Important notes:
 
-- `GMT_DIR`
-- `URI`
+- This setup is intended for Ubuntu `22.04` and `24.04` only.
+- `sudo` is required.
+- If your user is newly added to the `docker` group, you may need to relogin (or run `newgrp docker`) before running Docker without sudo.
+- If `./green-metrics-tool` already exists, setup prompts whether to overwrite it.
+- DB defaults are sourced from `kwa/.env.example` (notably `DATABASE_PASSWORD`).
 
-### Run benchmarks
+## Run Benchmarks
 
 Use `make measure` (wrapper around `scripts/measure.sh`):
 
@@ -43,6 +52,8 @@ make measure lang=rust iterations=3
 `profile=measure` is the default.
 `iterations=1` is the default.
 
+## Direct Runner Script
+
 Direct script usage (future KWA-compatible shape):
 
 ```bash
@@ -55,8 +66,8 @@ Supported script args (`key=value` only):
 - `lang=<csv>`
 - `bench=<csv>`
 - `iterations=<int>`
-- `gmt_dir=<path>` (optional)
-- `uri=<path>` (optional)
+- `gmt_dir=<path>` (optional, default: `./green-metrics-tool`)
+- `uri=<path>` (optional, default: repo root)
 
 When `lang` is omitted, all supported languages are used:
 
@@ -94,24 +105,6 @@ Profile behavior:
 
 - `measure`: uses canonical files `benchmarks/<lang>/<benchmark>.yml` and does **not** pass `--dev-no-sleeps`
 - `test`: uses generated files `benchmarks/<lang>/<benchmark>_test.yml` and passes `--dev-no-sleeps`
-
-Test profile inputs (`*_test.yml`):
-
-- `binary-trees: 6`
-- `fannkuch-redux: 6`
-- `fasta: 100`
-- `k-nucleotide: fasta-100.txt`
-- `mandelbrot: 100`
-- `n-body: 500`
-- `regex-redux: fasta-100.txt`
-- `spectral-norm: 500`
-
-Validation errors:
-
-- Invalid `profile`: must be `measure` or `test`
-- Invalid `iterations`: must be integer `>= 1`
-- Invalid `lang` / `bench`: must be known keys in supported lists
-- Malformed CSV in `lang` / `bench`: empty items or spaces are rejected
 
 ## References
 
