@@ -6,8 +6,7 @@ services:
   haskell-container:
     image: haskell:9.10.1
     setup-commands:
-      - command: bash -c "apt-get update && apt-get install -y --no-install-recommends libpcre2-dev && rm -rf /var/lib/apt/lists/*"
-      - command: bash -c "cabal update && cabal install --lib parallel ghc-compact hashable hashtables massiv vector containers bytestring"
+      - command: bash -c "cabal update && cabal install --lib massiv"
     command: sleep infinity
 
 flow:

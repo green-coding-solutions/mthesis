@@ -1,0 +1,19 @@
+name: PHP Benchmark (Mandelbrot)
+author: André Brandão <https://github.com/brandao07>
+description: PHP benchmarks using PHP CLI
+
+services:
+  php-container:
+    image: php:8.4-cli
+    setup-commands:
+      - command: sh -lc "docker-php-ext-install -j\"$(nproc)\" shmop pcntl && docker-php-ext-enable shmop pcntl"
+    command: sleep infinity
+
+flow:
+  - name: PHP-Mandelbrot
+    container: php-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/php/mandelbrot/build_in_tmp.sh
+      - type: console
+        command: /tmp/php-mandelbrot 80

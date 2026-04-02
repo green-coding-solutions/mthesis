@@ -6,8 +6,7 @@ services:
   haskell-container:
     image: haskell:9.10.1
     setup-commands:
-      - command: bash -c "apt-get update && apt-get install -y --no-install-recommends libpcre2-dev wget xz-utils && rm -rf /var/lib/apt/lists/*"
-      - command: bash -c "cabal update && cabal install --lib parallel ghc-compact hashable hashtables massiv vector containers bytestring"
+      - command: bash -c "cabal update && cabal install --lib parallel hashable hashtables containers bytestring"
     command: sleep infinity
 
 flow:
@@ -18,5 +17,3 @@ flow:
         command: sh -c "mkdir -p /tmp/haskell-k-nucleotide && ghc -O2 -XBangPatterns -threaded -rtsopts -XMagicHash /tmp/repo/benchmarks/haskell/k-nucleotide/main.hs -outputdir /tmp/haskell-k-nucleotide -odir /tmp/haskell-k-nucleotide -hidir /tmp/haskell-k-nucleotide -o /tmp/haskell-k-nucleotide/main"
       - type: console
         command: sh -c "/tmp/haskell-k-nucleotide/main +RTS -N4 -K2048M -RTS 0 < /tmp/repo/inputs/fasta-2500000.txt"
-
-

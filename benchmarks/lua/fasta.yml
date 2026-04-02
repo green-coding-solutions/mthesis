@@ -1,6 +1,6 @@
 name: Lua Benchmark (Fasta)
 author: André Brandão <https://github.com/brandao07>
-description: Lua fasta benchmark using Lua 5.5-luarocks-alpine3.22
+description: Lua benchmarks using Lua 5.5 + LuaRocks Alpine 3.22
 
 services:
   lua-container:

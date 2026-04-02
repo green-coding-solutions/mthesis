@@ -1,0 +1,20 @@
+name: Java Benchmark (N-Body)
+author: André Brandão <https://github.com/brandao07>
+description: Java benchmarks using GraalVM Native Image 23.0.2
+
+services:
+  java-container:
+    image: ghcr.io/graalvm/native-image-community:23.0.2
+    entrypoint: /bin/sh
+    command: -c "sleep infinity"
+
+flow:
+  - name: Java-N-Body
+    container: java-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/java/n-body/build_in_tmp.sh
+      - type: console
+        command: /tmp/java-build/n-body/nbody.graalvmaot-4.graalvmaot_run 500
+
+

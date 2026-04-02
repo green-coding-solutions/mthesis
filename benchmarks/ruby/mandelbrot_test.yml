@@ -1,0 +1,17 @@
+name: Ruby Benchmark (Mandelbrot)
+author: André Brandão <https://github.com/brandao07>
+description: Ruby benchmarks using Ruby 3.4 with YJIT
+
+services:
+  ruby-container:
+    image: ruby:3.4
+    command: sleep infinity
+
+flow:
+  - name: Ruby-Mandelbrot
+    container: ruby-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/ruby/mandelbrot/build_in_tmp.sh
+      - type: console
+        command: /tmp/ruby-mandelbrot 100

@@ -1,0 +1,19 @@
+name: Go Benchmark (K-Nucleotide)
+author: André Brandão <https://github.com/brandao07>
+description: Go benchmarks using Golang 1.25 Alpine
+
+services:
+  go-container:
+    image: golang:1.25-alpine
+    command: sleep infinity
+
+flow:
+  - name: Go-K-Nucleotide
+    container: go-container
+    commands:
+      - type: console
+        command: sh -c "go build -o /tmp/go-k-nucleotide /tmp/repo/benchmarks/go/k-nucleotide/main.go"
+      - type: console
+        command: sh -c "/tmp/go-k-nucleotide < /tmp/repo/inputs/fasta-100.txt"
+
+

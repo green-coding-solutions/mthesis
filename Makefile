@@ -1,22 +1,12 @@
-# Path to your Green Metrics Tool installation
-GMT_DIR := /Users/brandao/green-metrics-tool
-VENV := $(GMT_DIR)/venv/bin/activate
-URI := /Users/brandao/mthesis
+.PHONY: measure
 
-# Base command to run Green Metrics Tool
-RUN_GMT = source $(VENV) && \
-    python3 $(GMT_DIR)/runner.py \
-        --uri $(URI) \
-        --name run$(lang) \
-        --filename ./benchmarks/$(lang)/k-nucleotide.yml \
-        --dev-no-sleeps \
-        --iterations 1 \
-        --docker-prune
-
-# General run target
-run:
-	@if [ -z "$(lang)" ]; then \
-		echo "Please provide the language, e.g., make run lang=go"; \
-		exit 1; \
-	fi
-	@$(RUN_GMT)
+# Main benchmark target delegates to scripts/measure.sh.
+measure:
+	@args=""; \
+	if [ -n "$(profile)" ]; then args="$$args profile=$(profile)"; fi; \
+	if [ -n "$(iterations)" ]; then args="$$args iterations=$(iterations)"; fi; \
+	if [ -n "$(lang)" ]; then args="$$args lang=$(lang)"; fi; \
+	if [ -n "$(bench)" ]; then args="$$args bench=$(bench)"; fi; \
+	if [ -n "$(gmt_dir)" ]; then args="$$args gmt_dir=$(gmt_dir)"; fi; \
+	if [ -n "$(uri)" ]; then args="$$args uri=$(uri)"; fi; \
+	./scripts/measure.sh $$args

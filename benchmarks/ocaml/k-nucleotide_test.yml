@@ -1,0 +1,21 @@
+name: OCaml Benchmark (K-Nucleotide)
+author: André Brandão <https://github.com/brandao07>
+description: OCaml benchmarks using native-code OCaml 5.4.0+dev0-2024-08-25
+
+services:
+  ocaml-container:
+    image: ocaml/opam:ubuntu-24.04-ocaml-5.4
+    setup-commands:
+      - command: sh -lc "opam update && opam install -y ocamlfind re"
+    command: sleep infinity
+
+flow:
+  - name: OCaml-K-Nucleotide
+    container: ocaml-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/ocaml/k-nucleotide/build_in_tmp.sh
+      - type: console
+        command: sh -c "/tmp/ocaml-k-nucleotide < /tmp/repo/inputs/fasta-100.txt"
+
+

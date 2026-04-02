@@ -1,6 +1,6 @@
 name: PHP Benchmark (Fasta)
 author: André Brandão <https://github.com/brandao07>
-description: PHP Fasta benchmark using PHP CLI with OPcache JIT
+description: PHP benchmarks using PHP CLI
 
 services:
   php-container:

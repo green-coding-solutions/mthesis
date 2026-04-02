@@ -1,6 +1,6 @@
 name: PHP Benchmark (Mandelbrot)
 author: André Brandão <https://github.com/brandao07>
-description: PHP Mandelbrot benchmark using PHP CLI with OPcache JIT
+description: PHP benchmarks using PHP CLI
 
 services:
   php-container:

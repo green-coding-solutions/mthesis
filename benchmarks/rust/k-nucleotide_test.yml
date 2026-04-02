@@ -1,0 +1,22 @@
+name: Rust Benchmark (K-Nucleotide)
+author: André Brandão <https://github.com/brandao07>
+description: Rust benchmarks using Rust 1.93 Alpine
+
+services:
+  rust-container:
+    image: rust:1.93-alpine
+    setup-commands:
+      - command: sh -lc "apk add --no-cache rust cargo"
+      - command: sh -lc "mkdir -p /tmp/rust-prefetch/k-nucleotide && cp /tmp/repo/benchmarks/rust/k-nucleotide/Cargo.toml /tmp/rust-prefetch/k-nucleotide/Cargo.toml && CARGO_HOME=/tmp/cargo-home cargo fetch --manifest-path /tmp/rust-prefetch/k-nucleotide/Cargo.toml"
+    command: sleep infinity
+
+flow:
+  - name: Rust-K-Nucleotide
+    container: rust-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/rust/k-nucleotide/build_in_tmp.sh
+      - type: console
+        command: sh -c "/tmp/rust-k-nucleotide < /tmp/repo/inputs/fasta-100.txt"
+
+
