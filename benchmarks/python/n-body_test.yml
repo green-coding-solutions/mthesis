@@ -1,0 +1,17 @@
+name: Python Benchmark (N-Body)
+author: André Brandão <https://github.com/brandao07>
+description: Python benchmarks using Python 3.14 Alpine
+
+services:
+  python-container:
+    image: python:3.14.0-alpine3.22
+    command: sleep infinity
+
+flow:
+  - name: Python-N-Body
+    container: python-container
+    commands:
+      - type: console
+        command: python3 -OO /tmp/repo/benchmarks/python/n-body/main.py 500
+
+

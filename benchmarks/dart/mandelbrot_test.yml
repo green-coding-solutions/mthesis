@@ -1,0 +1,17 @@
+name: Dart Benchmark (Mandelbrot)
+author: André Brandão <https://github.com/brandao07>
+description: Dart benchmarks using Dart SDK 3.9.4
+
+services:
+  dart-container:
+    image: dart:3.9.4-sdk
+    command: sleep infinity
+
+flow:
+  - name: Dart-Mandelbrot
+    container: dart-container
+    commands:
+      - type: console
+        command: dart compile exe /tmp/repo/benchmarks/dart/mandelbrot/main.dart -o /tmp/main
+      - type: console
+        command: /tmp/main 100

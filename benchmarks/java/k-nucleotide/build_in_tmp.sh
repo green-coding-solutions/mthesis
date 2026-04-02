@@ -3,26 +3,14 @@ set -eu
 
 WORKDIR="/tmp/java-build/k-nucleotide"
 LIBDIR="/tmp/java-libs"
-FASTUTIL_JAR="/opt/src/java-libs/fastutil-8.3.1.jar"
-FALLBACK_JAR="$LIBDIR/fastutil-8.3.1.jar"
+JAR="$LIBDIR/fastutil-8.3.1.jar"
 
-mkdir -p "$WORKDIR" "$LIBDIR"
+mkdir -p "$WORKDIR"
 cp /tmp/repo/benchmarks/java/k-nucleotide/Main.java "$WORKDIR"/
 
-if [ -f "$FASTUTIL_JAR" ]; then
-  JAR="$FASTUTIL_JAR"
-else
-  JAR="$FALLBACK_JAR"
-  if [ ! -f "$JAR" ]; then
-    if command -v curl >/dev/null 2>&1; then
-      curl -fsSL -o "$JAR" "https://repo1.maven.org/maven2/it/unimi/dsi/fastutil/8.3.1/fastutil-8.3.1.jar"
-    elif command -v wget >/dev/null 2>&1; then
-      wget -q -O "$JAR" "https://repo1.maven.org/maven2/it/unimi/dsi/fastutil/8.3.1/fastutil-8.3.1.jar"
-    else
-      echo "Neither curl nor wget is available to download fastutil jar." >&2
-      exit 1
-    fi
-  fi
+if [ ! -f "$JAR" ]; then
+  echo "Missing fastutil jar at $JAR. Expected setup-commands to download it." >&2
+  exit 1
 fi
 
 cd "$WORKDIR"

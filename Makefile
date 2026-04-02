@@ -1,24 +1,28 @@
-# Path to your Green Metrics Tool installation
-GMT_DIR := /Users/brandao/green-metrics-tool
-VENV := $(GMT_DIR)/venv/bin/activate
-URI := /Users/brandao/mthesis
+.PHONY: setup uninstall measure kwa-build kwa-run
 
-# Base command to run Green Metrics Tool
-RUN_GMT = source $(VENV) && \
-    python3 $(GMT_DIR)/runner.py \
-        --uri $(URI) \
-        --name run$(lang) \
-        --filename ./benchmarks/$(lang)/default.yml \
-        --filename ./benchmarks/$(lang)/fasta.yml \
-        --filename ./benchmarks/$(lang)/mandelbrot.yml \
-        --dev-no-sleeps \
-        --iterations 1 \
-        --docker-prune
+GO_CACHE_DIR := $(CURDIR)/.gocache_local
 
-# General run target
-run:
-	@if [ -z "$(lang)" ]; then \
-		echo "Please provide the language, e.g., make run lang=go"; \
-		exit 1; \
-	fi
-	@$(RUN_GMT)
+setup:
+	./scripts/setup.sh
+
+uninstall:
+	./scripts/uninstall.sh
+
+# Main benchmark target delegates to scripts/measure.sh.
+measure:
+	@args=""; \
+	if [ -n "$(profile)" ]; then args="$$args profile=$(profile)"; fi; \
+	if [ -n "$(iterations)" ]; then args="$$args iterations=$(iterations)"; fi; \
+	if [ -n "$(lang)" ]; then args="$$args lang=$(lang)"; fi; \
+	if [ -n "$(bench)" ]; then args="$$args bench=$(bench)"; fi; \
+	if [ -n "$(gmt_dir)" ]; then args="$$args gmt_dir=$(gmt_dir)"; fi; \
+	if [ -n "$(uri)" ]; then args="$$args uri=$(uri)"; fi; \
+	./scripts/measure.sh $$args
+
+kwa-build:
+	@mkdir -p "$(GO_CACHE_DIR)" kwa/build
+	cd kwa && GOCACHE="$(GO_CACHE_DIR)" go build -o build/kwa ./cmd/main.go
+
+kwa-run:
+	@mkdir -p "$(GO_CACHE_DIR)"
+	cd kwa && GOCACHE="$(GO_CACHE_DIR)" go run ./cmd/main.go

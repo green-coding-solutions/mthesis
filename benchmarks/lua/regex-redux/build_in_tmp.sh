@@ -1,12 +1,9 @@
 #!/bin/sh
 set -eu
 
-# regexredux.lua requires rex_pcre2 from lrexlib-pcre2.
 if ! lua -e 'require("rex_pcre2")' >/dev/null 2>&1; then
-  if command -v apk >/dev/null 2>&1; then
-    apk add --no-cache gcc musl-dev make pcre2-dev
-  fi
-  luarocks install lrexlib-pcre2
+  echo "Missing rex_pcre2. Expected setup-commands to install lrexlib-pcre2." >&2
+  exit 1
 fi
 
 WORKDIR=/tmp/lua-build/regex-redux

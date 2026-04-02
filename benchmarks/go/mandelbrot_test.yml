@@ -1,0 +1,17 @@
+name: Go Benchmark (Mandelbrot)
+author: André Brandão <https://github.com/brandao07>
+description: Go benchmarks using Golang 1.25 Alpine
+
+services:
+  go-container:
+    image: golang:1.25-alpine
+    command: sleep infinity
+
+flow:
+  - name: Go-Mandelbrot
+    container: go-container
+    commands:
+      - type: console
+        command: sh -c "go build -o /tmp/go-mandelbrot /tmp/repo/benchmarks/go/mandelbrot/main.go"
+      - type: console
+        command: /tmp/go-mandelbrot 100

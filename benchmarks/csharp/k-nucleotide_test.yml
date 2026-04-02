@@ -1,0 +1,17 @@
+name: CSharp Benchmark (K-Nucleotide)
+author: André Brandão <https://github.com/brandao07>
+description: CSharp benchmarks using .NET SDK 9.0
+
+services:
+  csharp-container:
+    image: mcr.microsoft.com/dotnet/sdk:9.0
+    command: sleep infinity
+
+flow:
+  - name: CSharp-K-Nucleotide
+    container: csharp-container
+    commands:
+      - type: console
+        command: bash -c "dotnet new console -n app --output /tmp/out --force && cp /tmp/repo/benchmarks/csharp/k-nucleotide/main.cs /tmp/out/Program.cs && cd /tmp/out && dotnet build -c Release -p:AllowUnsafeBlocks=true"
+      - type: console
+        command: sh -c "dotnet /tmp/out/bin/Release/net9.0/app.dll 0 < /tmp/repo/inputs/fasta-100.txt"

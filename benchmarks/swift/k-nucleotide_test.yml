@@ -1,0 +1,19 @@
+name: Swift Benchmark (K-Nucleotide)
+author: André Brandão <https://github.com/brandao07>
+description: Swift benchmarks using Swift 6.0.3 (runs on container architecture, e.g. arm64 on Apple Silicon)
+
+services:
+  swift-container:
+    image: swift:6.0.3
+    command: sleep infinity
+
+flow:
+  - name: Swift-K-Nucleotide
+    container: swift-container
+    commands:
+      - type: console
+        command: swiftc /tmp/repo/benchmarks/swift/k-nucleotide/main.swift -Ounchecked -wmo -o /tmp/swift-k-nucleotide
+      - type: console
+        command: sh -c "/tmp/swift-k-nucleotide 0 < /tmp/repo/inputs/fasta-100.txt"
+
+

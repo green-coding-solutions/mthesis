@@ -1,0 +1,19 @@
+name: Ruby Benchmark (Spectral-Norm)
+author: André Brandão <https://github.com/brandao07>
+description: Ruby benchmarks using Ruby 3.4 with YJIT
+
+services:
+  ruby-container:
+    image: ruby:3.4
+    command: sleep infinity
+
+flow:
+  - name: Ruby-Spectral-Norm
+    container: ruby-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/ruby/spectral-norm/build_in_tmp.sh
+      - type: console
+        command: /tmp/ruby-spectral-norm 500
+
+

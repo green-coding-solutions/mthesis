@@ -1,0 +1,17 @@
+name: Perl Benchmark (Regex-Redux)
+author: André Brandão <https://github.com/brandao07>
+description: Perl benchmarks using Perl 5.42.1 (threaded)
+
+services:
+  perl-container:
+    image: perl:5.42.1-threaded
+    command: sleep infinity
+
+flow:
+  - name: Perl-Regex-Redux
+    container: perl-container
+    commands:
+      - type: console
+        command: sh -c "perl /tmp/repo/benchmarks/perl/regex-redux/main.pl 0 < /tmp/repo/inputs/fasta-100.txt"
+
+

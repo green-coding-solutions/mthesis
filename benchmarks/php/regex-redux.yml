@@ -1,0 +1,20 @@
+name: PHP Benchmark (Regex-Redux)
+author: André Brandão <https://github.com/brandao07>
+description: PHP benchmarks using PHP CLI
+
+services:
+  php-container:
+    image: php:8.4-cli
+    setup-commands:
+      - command: sh -lc "docker-php-ext-install -j\"$(nproc)\" shmop pcntl sysvmsg && docker-php-ext-enable shmop pcntl sysvmsg"
+    command: sleep infinity
+
+flow:
+  - name: PHP-Regex-Redux
+    container: php-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/php/regex-redux/build_in_tmp.sh
+      - type: console
+        command: sh -c "/tmp/php-regex-redux < /tmp/repo/inputs/fasta-5000000.txt"
+

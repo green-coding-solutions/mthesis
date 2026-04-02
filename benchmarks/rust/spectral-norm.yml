@@ -1,0 +1,21 @@
+name: Rust Benchmark (Spectral-Norm)
+author: André Brandão <https://github.com/brandao07>
+description: Rust benchmarks using Rust 1.93 Alpine
+
+services:
+  rust-container:
+    image: rust:1.93-alpine
+    setup-commands:
+      - command: sh -lc "apk add --no-cache rust cargo"
+      - command: sh -lc "mkdir -p /tmp/rust-prefetch/spectral-norm && cp /tmp/repo/benchmarks/rust/spectral-norm/Cargo.toml /tmp/rust-prefetch/spectral-norm/Cargo.toml && CARGO_HOME=/tmp/cargo-home cargo fetch --manifest-path /tmp/rust-prefetch/spectral-norm/Cargo.toml"
+    command: sleep infinity
+
+flow:
+  - name: Rust-Spectral-Norm
+    container: rust-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/rust/spectral-norm/build_in_tmp.sh
+      - type: console
+        command: /tmp/rust-spectral-norm 5500
+

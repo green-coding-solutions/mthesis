@@ -1,0 +1,20 @@
+name: Lua Benchmark (Regex-Redux)
+author: André Brandão <https://github.com/brandao07>
+description: Lua benchmarks using Lua 5.5 + LuaRocks Alpine 3.22
+
+services:
+  lua-container:
+    image: nickblah/lua:5.5-luarocks-alpine3.22
+    setup-commands:
+      - command: sh -lc "if command -v apk >/dev/null 2>&1; then apk add --no-cache gcc musl-dev make pcre2-dev; fi && luarocks install lrexlib-pcre2"
+    command: sleep infinity
+
+flow:
+  - name: Lua-Regex-Redux
+    container: lua-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/lua/regex-redux/build_in_tmp.sh
+      - type: console
+        command: sh -c "lua /tmp/lua-build/regex-redux/regexredux.lua_run 0 < /tmp/repo/inputs/fasta-5000000.txt"
+

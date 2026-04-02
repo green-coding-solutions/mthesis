@@ -1,0 +1,17 @@
+name: NodeJS Benchmark (K-Nucleotide)
+author: André Brandão <https://github.com/brandao07>
+description: NodeJS benchmarks using Node 25 Alpine
+
+services:
+  node-container:
+    image: node:25-alpine3.21
+    command: sleep infinity
+
+flow:
+  - name: NodeJS-K-Nucleotide
+    container: node-container
+    commands:
+      - type: console
+        command: sh -c "node /tmp/repo/benchmarks/nodejs/k-nucleotide/main.js < /tmp/repo/inputs/fasta-2500000.txt"
+
+

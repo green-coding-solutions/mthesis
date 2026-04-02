@@ -1,0 +1,15 @@
+name: NodeJS Benchmark (Mandelbrot)
+author: André Brandão <https://github.com/brandao07>
+description: NodeJS benchmarks using Node 25 Alpine
+
+services:
+  node-container:
+    image: node:25-alpine3.21
+    command: sleep infinity
+
+flow:
+  - name: NodeJS-Mandelbrot
+    container: node-container
+    commands:
+      - type: console
+        command: node /tmp/repo/benchmarks/nodejs/mandelbrot/main.js 100
