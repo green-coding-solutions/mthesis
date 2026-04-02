@@ -1,0 +1,22 @@
+name: Haskell Benchmark (Fannkuch-Redux)
+author: André Brandão <https://github.com/brandao07>
+description: Haskell benchmarks using GHC 9.10.1
+
+services:
+  haskell-container:
+    image: haskell:9.10.1
+    setup-commands:
+      - command: bash -c "apt-get update && apt-get install -y --no-install-recommends libpcre2-dev wget xz-utils && rm -rf /var/lib/apt/lists/*"
+      - command: bash -c "cabal update && cabal install --lib parallel ghc-compact hashable hashtables massiv vector containers bytestring"
+    command: sleep infinity
+
+flow:
+  - name: Haskell-Fannkuch-Redux
+    container: haskell-container
+    commands:
+      - type: console
+        command: sh -c "mkdir -p /tmp/haskell-fannkuch-redux && ghc -O2 -XBangPatterns -threaded -rtsopts -XMagicHash /tmp/repo/benchmarks/haskell/fannkuch-redux/main.hs -outputdir /tmp/haskell-fannkuch-redux -odir /tmp/haskell-fannkuch-redux -hidir /tmp/haskell-fannkuch-redux -o /tmp/haskell-fannkuch-redux/main"
+      - type: console
+        command: /tmp/haskell-fannkuch-redux/main +RTS -N4 -RTS 12
+
+

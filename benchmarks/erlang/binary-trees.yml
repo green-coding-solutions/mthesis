@@ -1,0 +1,17 @@
+name: Erlang Benchmark (Binary-Trees)
+author: André Brandão <https://github.com/brandao07>
+description: Erlang benchmarks using Erlang OTP 28.1.1
+
+services:
+  erlang-container:
+    image: erlang:28.1.1
+    command: sleep infinity
+
+flow:
+  - name: Erlang-Binary-Trees
+    container: erlang-container
+    commands:
+      - type: console
+        command: erlc /tmp/repo/benchmarks/erlang/binary-trees/binarytrees.erl
+      - type: console
+        command: erl -pa /tmp/repo/benchmarks/erlang/binary-trees -noshell -smp enable -run binarytrees main 21

@@ -26,7 +26,6 @@ var languageByNormalized = map[string]ProgrammingLanguage{
 	"csharp":  "csharp",
 	"dart":    "dart",
 	"erlang":  "erlang",
-	"fortran": "fortran",
 	"fsharp":  "fsharp",
 	"go":      "go",
 	"haskell": "haskell",

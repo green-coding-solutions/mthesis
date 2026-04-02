@@ -1,0 +1,17 @@
+name: Erlang Benchmark (K-Nucleotide)
+author: André Brandão <https://github.com/brandao07>
+description: Erlang benchmarks using Erlang OTP 28.1.1
+
+services:
+  erlang-container:
+    image: erlang:28.1.1
+    command: sleep infinity
+
+flow:
+  - name: Erlang-K-Nucleotide
+    container: erlang-container
+    commands:
+      - type: console
+        command: erlc /tmp/repo/benchmarks/erlang/k-nucleotide/knucleotide.erl
+      - type: console
+        command: sh -c "erl -pa /tmp/repo/benchmarks/erlang/k-nucleotide -noshell -smp enable -run knucleotide main dummy < /tmp/repo/inputs/fasta-2500000.txt"

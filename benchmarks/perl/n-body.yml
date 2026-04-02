@@ -1,0 +1,17 @@
+name: Perl Benchmark (N-Body)
+author: André Brandão <https://github.com/brandao07>
+description: Perl benchmarks using Perl 5.42.1 (threaded)
+
+services:
+  perl-container:
+    image: perl:5.42.1-threaded
+    command: sleep infinity
+
+flow:
+  - name: Perl-N-Body
+    container: perl-container
+    commands:
+      - type: console
+        command: perl /tmp/repo/benchmarks/perl/n-body/main.pl 50000000
+
+

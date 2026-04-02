@@ -1,0 +1,19 @@
+name: Ruby Benchmark (K-Nucleotide)
+author: André Brandão <https://github.com/brandao07>
+description: Ruby benchmarks using Ruby 3.4 with YJIT
+
+services:
+  ruby-container:
+    image: ruby:3.4
+    command: sleep infinity
+
+flow:
+  - name: Ruby-K-Nucleotide
+    container: ruby-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/ruby/k-nucleotide/build_in_tmp.sh
+      - type: console
+        command: sh -c "/tmp/ruby-k-nucleotide < /tmp/repo/inputs/fasta-2500000.txt"
+
+

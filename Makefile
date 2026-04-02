@@ -8,14 +8,7 @@ RUN_GMT = source $(VENV) && \
     python3 $(GMT_DIR)/runner.py \
         --uri $(URI) \
         --name run$(lang) \
-        --filename ./benchmarks/$(lang)/binary-trees.yml \
-        --filename ./benchmarks/$(lang)/fannkuch-redux.yml \
         --filename ./benchmarks/$(lang)/k-nucleotide.yml \
-        --filename ./benchmarks/$(lang)/n-body.yml \
-        --filename ./benchmarks/$(lang)/regex-redux.yml \
-        --filename ./benchmarks/$(lang)/spectral-norm.yml \
-        --filename ./benchmarks/$(lang)/fasta.yml \
-        --filename ./benchmarks/$(lang)/mandelbrot.yml \
         --dev-no-sleeps \
         --iterations 1 \
         --docker-prune

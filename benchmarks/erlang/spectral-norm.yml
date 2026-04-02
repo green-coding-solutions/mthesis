@@ -1,0 +1,17 @@
+name: Erlang Benchmark (Spectral-Norm)
+author: André Brandão <https://github.com/brandao07>
+description: Erlang benchmarks using Erlang OTP 28.1.1
+
+services:
+  erlang-container:
+    image: erlang:28.1.1
+    command: sleep infinity
+
+flow:
+  - name: Erlang-Spectral-Norm
+    container: erlang-container
+    commands:
+      - type: console
+        command: erlc /tmp/repo/benchmarks/erlang/spectral-norm/spectralnorm.erl
+      - type: console
+        command: erl -pa /tmp/repo/benchmarks/erlang/spectral-norm -noshell -smp enable -run spectralnorm main 5500

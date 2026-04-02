@@ -1,10 +1,10 @@
 name: Erlang Benchmark (Fasta)
 author: André Brandão <https://github.com/brandao07>
-description: Erlang benchmarks using Erlang 28.1.0.0 Alpine
+description: Erlang benchmarks using Erlang OTP 28.1.1
 
 services:
   erlang-container:
-    image: erlang:28.1.0.0-alpine
+    image: erlang:28.1.1
     command: sleep infinity
 
 flow:
@@ -12,4 +12,6 @@ flow:
     container: erlang-container
     commands:
       - type: console
-        command: sh -c "erlc /tmp/repo/benchmarks/erlang/fasta/fasta.erl && erl -pa /tmp/repo/benchmarks/erlang/fasta -noshell -smp enable -run fasta main 25000000"
+        command: erlc /tmp/repo/benchmarks/erlang/fasta/fasta.erl
+      - type: console
+        command: erl -pa /tmp/repo/benchmarks/erlang/fasta -noshell -smp enable -run fasta main 25000000

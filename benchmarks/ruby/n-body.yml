@@ -1,0 +1,19 @@
+name: Ruby Benchmark (N-Body)
+author: André Brandão <https://github.com/brandao07>
+description: Ruby benchmarks using Ruby 3.4 with YJIT
+
+services:
+  ruby-container:
+    image: ruby:3.4
+    command: sleep infinity
+
+flow:
+  - name: Ruby-N-Body
+    container: ruby-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/ruby/n-body/build_in_tmp.sh
+      - type: console
+        command: /tmp/ruby-n-body 50000000
+
+

@@ -17,4 +17,4 @@ flow:
       - type: console
         command: sh -c "mkdir -p /tmp/haskell-fasta && ghc -O2 -XBangPatterns -threaded -rtsopts -XMagicHash  /tmp/repo/benchmarks/haskell/fasta/main.hs -outputdir /tmp/haskell-fasta -odir /tmp/haskell-fasta -hidir /tmp/haskell-fasta -o /tmp/haskell-fasta/main"
       - type: console
-        command: /tmp/haskell-fasta/main +RTS -N4 -RTS 100
+        command: /tmp/haskell-fasta/main +RTS -N4 -RTS 25000000

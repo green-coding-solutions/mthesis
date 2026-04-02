@@ -1,0 +1,19 @@
+name: C Benchmark (K-Nucleotide)
+author: André Brandão <https://github.com/brandao07>
+description: C benchmarks using GCC 15.2.0
+
+services:
+  c-container:
+    image: gcc:15.2.0
+    command: sleep infinity
+
+flow:
+  - name: C-K-Nucleotide
+    container: c-container
+    commands:
+      - type: console
+        command: gcc -pipe -Wall -O3 -fomit-frame-pointer -march=native -fopenmp /tmp/repo/benchmarks/c/k-nucleotide/main.c -o /tmp/main
+      - type: console
+        command: sh -c "/tmp/main < /tmp/repo/inputs/fasta-2500000.txt"
+
+

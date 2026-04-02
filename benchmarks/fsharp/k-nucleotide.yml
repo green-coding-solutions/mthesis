@@ -1,0 +1,21 @@
+name: FSharp Benchmark (K-Nucleotide)
+author: André Brandão <https://github.com/brandao07>
+description: FSharp benchmarks using .NET SDK 9.0
+
+services:
+  fsharp-container:
+    image: mcr.microsoft.com/dotnet/sdk:9.0
+    setup-commands:
+      - command: sh /tmp/repo/benchmarks/fsharp/setup_dependencies.sh
+    command: sleep infinity
+
+flow:
+  - name: FSharp-K-Nucleotide
+    container: fsharp-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/fsharp/k-nucleotide/build_in_tmp.sh
+      - type: console
+        command: sh -c "/tmp/fsharp-k-nucleotide < /tmp/repo/inputs/fasta-2500000.txt"
+
+

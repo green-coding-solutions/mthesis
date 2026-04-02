@@ -1,0 +1,21 @@
+name: PHP Benchmark (Binary-Trees)
+author: André Brandão <https://github.com/brandao07>
+description: PHP benchmarks using PHP CLI
+
+services:
+  php-container:
+    image: php:8.4-cli
+    setup-commands:
+      - command: sh -lc "docker-php-ext-install -j\"$(nproc)\" shmop pcntl sysvmsg && docker-php-ext-enable shmop pcntl sysvmsg"
+    command: sleep infinity
+
+flow:
+  - name: PHP-Binary-Trees
+    container: php-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/php/binary-trees/build_in_tmp.sh
+      - type: console
+        command: /tmp/php-binary-trees 21
+
+

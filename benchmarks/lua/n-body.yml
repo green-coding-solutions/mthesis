@@ -1,0 +1,19 @@
+name: Lua Benchmark (N-Body)
+author: André Brandão <https://github.com/brandao07>
+description: Lua benchmarks using Lua 5.5 + LuaRocks Alpine 3.22
+
+services:
+  lua-container:
+    image: nickblah/lua:5.5-luarocks-alpine3.22
+    command: sleep infinity
+
+flow:
+  - name: Lua-N-Body
+    container: lua-container
+    commands:
+      - type: console
+        command: sh /tmp/repo/benchmarks/lua/n-body/build_in_tmp.sh
+      - type: console
+        command: lua /tmp/lua-build/n-body/nbody.lua-2.lua_run 50000000
+
+
