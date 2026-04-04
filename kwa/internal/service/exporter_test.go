@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"mthesis/kwa/internal/constant"
 	"mthesis/kwa/internal/entity"
@@ -20,6 +21,12 @@ import (
 type batchCall struct {
 	limit  int
 	offset int
+	filter entity.TimeRangeFilter
+}
+
+type byIDCall struct {
+	runID  string
+	filter entity.TimeRangeFilter
 }
 
 type fakePhaseMetricsProvider struct {
@@ -29,7 +36,7 @@ type fakePhaseMetricsProvider struct {
 	batchErrAtCall      map[int]error
 	phaseMetricsByID    map[string][]entity.PhaseMetrics
 	phaseMetricsByIDErr map[string]error
-	getByIDCalls        []string
+	getByIDCalls        []byIDCall
 	getBatchCalls       []batchCall
 	getBatchCallIdx     int
 }
@@ -47,8 +54,16 @@ func (f *fakePhaseMetricsProvider) GetMetricKeys(_ context.Context) ([]string, e
 	return f.metricKeys, nil
 }
 
-func (f *fakePhaseMetricsProvider) GetPhaseMetricsBatch(_ context.Context, limit, offset int) ([]entity.PhaseMetrics, error) {
-	f.getBatchCalls = append(f.getBatchCalls, batchCall{limit: limit, offset: offset})
+func (f *fakePhaseMetricsProvider) GetPhaseMetricsBatch(
+	_ context.Context,
+	limit, offset int,
+	filter entity.TimeRangeFilter,
+) ([]entity.PhaseMetrics, error) {
+	f.getBatchCalls = append(f.getBatchCalls, batchCall{
+		limit:  limit,
+		offset: offset,
+		filter: filter.Clone(),
+	})
 	callIndex := f.getBatchCallIdx
 	f.getBatchCallIdx++
 
@@ -62,8 +77,15 @@ func (f *fakePhaseMetricsProvider) GetPhaseMetricsBatch(_ context.Context, limit
 	return f.batches[callIndex], nil
 }
 
-func (f *fakePhaseMetricsProvider) GetPhaseMetricsByID(_ context.Context, runID string) ([]entity.PhaseMetrics, error) {
-	f.getByIDCalls = append(f.getByIDCalls, runID)
+func (f *fakePhaseMetricsProvider) GetPhaseMetricsByID(
+	_ context.Context,
+	runID string,
+	filter entity.TimeRangeFilter,
+) ([]entity.PhaseMetrics, error) {
+	f.getByIDCalls = append(f.getByIDCalls, byIDCall{
+		runID:  runID,
+		filter: filter.Clone(),
+	})
 	if err, ok := f.phaseMetricsByIDErr[runID]; ok {
 		return nil, err
 	}
@@ -90,13 +112,17 @@ func TestNewExporterService_UsesDefaultParserWhenNil(t *testing.T) {
 		},
 	}
 
-	exporterService := withTempErrorLogPath(t, NewExporterService(nil, provider))
+	exporterService := NewExporterService(nil, provider)
 	if exporterService.parserService == nil {
 		t.Fatalf("parserService should be initialized when nil is passed")
 	}
+	if exporterService.errorLogPath != constant.DefaultErrorLogPath {
+		t.Fatalf("errorLogPath = %q, want %q", exporterService.errorLogPath, constant.DefaultErrorLogPath)
+	}
+	exporterService = withTempErrorLogPath(t, exporterService)
 
 	var out bytes.Buffer
-	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 1)
+	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 1, entity.TimeRangeFilter{})
 	if err != nil {
 		t.Fatalf("unexpected error with default parser: %v", err)
 	}
@@ -111,21 +137,24 @@ func TestExportMeasurementsCSV_Success(t *testing.T) {
 		batches: [][]entity.PhaseMetrics{
 			{
 				{
-					RunID:   "run-1",
-					Phase:   "005_Go-Binary-Trees",
-					Metrics: map[string]int64{"cpu_time_powermetrics_vm-docker_vm-ns": 47560725453},
+					RunID:      "run-1",
+					MeasuredAt: time.Date(2026, time.April, 2, 10, 0, 0, 0, time.Local),
+					Phase:      "005_Go-Binary-Trees",
+					Metrics:    map[string]int64{"cpu_time_powermetrics_vm-docker_vm-ns": 47560725453},
 				},
 				{
-					RunID:   "run-1",
-					Phase:   "009_python-regex-redux",
-					Metrics: map[string]int64{"gpu_carbon_powermetrics_component-component-ug": 13},
+					RunID:      "run-1",
+					MeasuredAt: time.Date(2026, time.April, 2, 10, 0, 0, 0, time.Local),
+					Phase:      "009_python-regex-redux",
+					Metrics:    map[string]int64{"gpu_carbon_powermetrics_component-component-ug": 13},
 				},
 			},
 			{
 				{
-					RunID:   "run-2",
-					Phase:   "006_Go-Fasta",
-					Metrics: map[string]int64{},
+					RunID:      "run-2",
+					MeasuredAt: time.Date(2026, time.April, 1, 9, 0, 0, 0, time.Local),
+					Phase:      "006_Go-Fasta",
+					Metrics:    map[string]int64{},
 				},
 			},
 			{},
@@ -134,7 +163,7 @@ func TestExportMeasurementsCSV_Success(t *testing.T) {
 	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
 
 	var out bytes.Buffer
-	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 2)
+	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 2, entity.TimeRangeFilter{})
 	if err != nil {
 		t.Fatalf("ExportMeasurementsCSV() error = %v", err)
 	}
@@ -147,6 +176,7 @@ func TestExportMeasurementsCSV_Success(t *testing.T) {
 	want := [][]string{
 		{
 			"run_id",
+			"measured_at",
 			"language",
 			"benchmark",
 			"cpu_time_powermetrics_vm-docker_vm-ns",
@@ -154,6 +184,7 @@ func TestExportMeasurementsCSV_Success(t *testing.T) {
 		},
 		{
 			"run-1",
+			"2026-04-02 10:00:00",
 			"go",
 			"binary-trees",
 			"47560725453",
@@ -161,6 +192,7 @@ func TestExportMeasurementsCSV_Success(t *testing.T) {
 		},
 		{
 			"run-1",
+			"2026-04-02 10:00:00",
 			"python",
 			"regex-redux",
 			"",
@@ -168,6 +200,7 @@ func TestExportMeasurementsCSV_Success(t *testing.T) {
 		},
 		{
 			"run-2",
+			"2026-04-01 09:00:00",
 			"go",
 			"fasta",
 			"",
@@ -196,7 +229,7 @@ func TestExportMeasurementsCSV_GetMetricKeysError(t *testing.T) {
 	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
 
 	var out bytes.Buffer
-	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 2)
+	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 2, entity.TimeRangeFilter{})
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}
@@ -213,7 +246,7 @@ func TestExportMeasurementsCSV_GetPhaseMetricsBatchError(t *testing.T) {
 	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
 
 	var out bytes.Buffer
-	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 2)
+	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 2, entity.TimeRangeFilter{})
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}
@@ -238,7 +271,7 @@ func TestExportMeasurementsCSV_PrefetchNextBatchError(t *testing.T) {
 	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
 
 	var out bytes.Buffer
-	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 1)
+	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 1, entity.TimeRangeFilter{})
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}
@@ -251,8 +284,8 @@ func TestExportMeasurementsCSV_PrefetchNextBatchError(t *testing.T) {
 		t.Fatalf("csv read error = %v", readErr)
 	}
 	wantRecords := [][]string{
-		{"run_id", "language", "benchmark", "k"},
-		{"run-1", "go", "binary-trees", "1"},
+		{"run_id", "measured_at", "language", "benchmark", "k"},
+		{"run-1", "", "go", "binary-trees", "1"},
 	}
 	if !reflect.DeepEqual(records, wantRecords) {
 		t.Fatalf("csv records mismatch:\n got=%#v\nwant=%#v", records, wantRecords)
@@ -284,7 +317,7 @@ func TestExportMeasurementsCSV_StopsAfterTerminalEmptyBatch(t *testing.T) {
 	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
 
 	var out bytes.Buffer
-	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 1)
+	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 1, entity.TimeRangeFilter{})
 	if err != nil {
 		t.Fatalf("ExportMeasurementsCSV() error = %v", err)
 	}
@@ -314,7 +347,7 @@ func TestExportMeasurementsCSV_ParseError(t *testing.T) {
 	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
 
 	var out bytes.Buffer
-	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 2)
+	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 2, entity.TimeRangeFilter{})
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}
@@ -349,7 +382,7 @@ func TestExportMeasurementsCSV_UnknownLanguageOrBenchmark_LogsAndContinues(t *te
 	exporterService.errorLogPath = logPath
 
 	var out bytes.Buffer
-	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 10)
+	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 10, entity.TimeRangeFilter{})
 	if err != nil {
 		t.Fatalf("ExportMeasurementsCSV() error = %v", err)
 	}
@@ -360,8 +393,8 @@ func TestExportMeasurementsCSV_UnknownLanguageOrBenchmark_LogsAndContinues(t *te
 	}
 
 	want := [][]string{
-		{"run_id", "language", "benchmark", "k"},
-		{"run-1", "go", "binary-trees", "1"},
+		{"run_id", "measured_at", "language", "benchmark", "k"},
+		{"run-1", "", "go", "binary-trees", "1"},
 	}
 	if !reflect.DeepEqual(records, want) {
 		t.Fatalf("csv records mismatch:\n got=%#v\nwant=%#v", records, want)
@@ -409,11 +442,37 @@ func TestExportMeasurementsCSV_InvalidArguments(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.service.ExportMeasurementsCSV(context.Background(), tc.writer, tc.batchSize)
+			err := tc.service.ExportMeasurementsCSV(context.Background(), tc.writer, tc.batchSize, entity.TimeRangeFilter{})
 			if err == nil {
 				t.Fatalf("expected error, got nil")
 			}
 		})
+	}
+}
+
+func TestExportMeasurementsCSV_PropagatesDateRangeToProvider(t *testing.T) {
+	provider := &fakePhaseMetricsProvider{
+		metricKeys: []string{"k"},
+		batches:    [][]entity.PhaseMetrics{{}},
+	}
+	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
+
+	from := time.Date(2026, time.April, 1, 0, 0, 0, 0, time.Local)
+	to := time.Date(2026, time.April, 2, 0, 0, 0, 0, time.Local)
+
+	var out bytes.Buffer
+	err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 5, entity.TimeRangeFilter{From: &from, To: &to})
+	if err != nil {
+		t.Fatalf("ExportMeasurementsCSV() error = %v", err)
+	}
+	if len(provider.getBatchCalls) != 1 {
+		t.Fatalf("expected one batch call, got %#v", provider.getBatchCalls)
+	}
+	if provider.getBatchCalls[0].filter.From == nil || provider.getBatchCalls[0].filter.To == nil {
+		t.Fatalf("expected date range in provider call")
+	}
+	if !provider.getBatchCalls[0].filter.From.Equal(from) || !provider.getBatchCalls[0].filter.To.Equal(to) {
+		t.Fatalf("unexpected propagated range: %#v", provider.getBatchCalls[0])
 	}
 }
 
@@ -427,14 +486,16 @@ func TestExportMeasurementsCSVByID_Success(t *testing.T) {
 		phaseMetricsByID: map[string][]entity.PhaseMetrics{
 			runID: {
 				{
-					RunID:   runID,
-					Phase:   "005_Go-Binary-Trees",
-					Metrics: map[string]int64{"cpu_time_powermetrics_vm-docker_vm-ns": 47560725453},
+					RunID:      runID,
+					MeasuredAt: time.Date(2026, time.April, 2, 10, 0, 0, 0, time.Local),
+					Phase:      "005_Go-Binary-Trees",
+					Metrics:    map[string]int64{"cpu_time_powermetrics_vm-docker_vm-ns": 47560725453},
 				},
 				{
-					RunID:   runID,
-					Phase:   "009_python-regex-redux",
-					Metrics: map[string]int64{"gpu_carbon_powermetrics_component-component-ug": 13},
+					RunID:      runID,
+					MeasuredAt: time.Date(2026, time.April, 2, 10, 0, 0, 0, time.Local),
+					Phase:      "009_python-regex-redux",
+					Metrics:    map[string]int64{"gpu_carbon_powermetrics_component-component-ug": 13},
 				},
 			},
 		},
@@ -442,7 +503,7 @@ func TestExportMeasurementsCSVByID_Success(t *testing.T) {
 	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
 
 	var out bytes.Buffer
-	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID)
+	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID, entity.TimeRangeFilter{})
 	if err != nil {
 		t.Fatalf("ExportMeasurementsCSVByID() error = %v", err)
 	}
@@ -455,6 +516,7 @@ func TestExportMeasurementsCSVByID_Success(t *testing.T) {
 	want := [][]string{
 		{
 			"run_id",
+			"measured_at",
 			"language",
 			"benchmark",
 			"cpu_time_powermetrics_vm-docker_vm-ns",
@@ -462,6 +524,7 @@ func TestExportMeasurementsCSVByID_Success(t *testing.T) {
 		},
 		{
 			"run-1",
+			"2026-04-02 10:00:00",
 			"go",
 			"binary-trees",
 			"47560725453",
@@ -469,6 +532,7 @@ func TestExportMeasurementsCSVByID_Success(t *testing.T) {
 		},
 		{
 			"run-1",
+			"2026-04-02 10:00:00",
 			"python",
 			"regex-redux",
 			"",
@@ -479,8 +543,11 @@ func TestExportMeasurementsCSVByID_Success(t *testing.T) {
 		t.Fatalf("csv records mismatch:\n got=%#v\nwant=%#v", records, want)
 	}
 
-	if !reflect.DeepEqual(provider.getByIDCalls, []string{runID}) {
-		t.Fatalf("get by ID calls mismatch:\n got=%#v\nwant=%#v", provider.getByIDCalls, []string{runID})
+	wantByIDCalls := []byIDCall{
+		{runID: runID, filter: entity.TimeRangeFilter{}},
+	}
+	if !reflect.DeepEqual(provider.getByIDCalls, wantByIDCalls) {
+		t.Fatalf("get by ID calls mismatch:\n got=%#v\nwant=%#v", provider.getByIDCalls, wantByIDCalls)
 	}
 }
 
@@ -491,7 +558,7 @@ func TestExportMeasurementsCSVByID_GetMetricKeysError(t *testing.T) {
 	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
 
 	var out bytes.Buffer
-	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, "run-1")
+	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, "run-1", entity.TimeRangeFilter{})
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}
@@ -508,7 +575,7 @@ func TestExportMeasurementsCSVByID_GetPhaseMetricsByIDError(t *testing.T) {
 	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
 
 	var out bytes.Buffer
-	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID)
+	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID, entity.TimeRangeFilter{})
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}
@@ -531,7 +598,7 @@ func TestExportMeasurementsCSVByID_ParseError(t *testing.T) {
 	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
 
 	var out bytes.Buffer
-	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID)
+	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID, entity.TimeRangeFilter{})
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}
@@ -566,7 +633,7 @@ func TestExportMeasurementsCSVByID_UnknownLanguageOrBenchmark_LogsAndContinues(t
 	exporterService.errorLogPath = logPath
 
 	var out bytes.Buffer
-	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID)
+	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID, entity.TimeRangeFilter{})
 	if err != nil {
 		t.Fatalf("ExportMeasurementsCSVByID() error = %v", err)
 	}
@@ -577,8 +644,8 @@ func TestExportMeasurementsCSVByID_UnknownLanguageOrBenchmark_LogsAndContinues(t
 	}
 
 	want := [][]string{
-		{"run_id", "language", "benchmark", "k"},
-		{"run-1", "go", "binary-trees", "1"},
+		{"run_id", "measured_at", "language", "benchmark", "k"},
+		{"run-1", "", "go", "binary-trees", "1"},
 	}
 	if !reflect.DeepEqual(records, want) {
 		t.Fatalf("csv records mismatch:\n got=%#v\nwant=%#v", records, want)
@@ -632,11 +699,40 @@ func TestExportMeasurementsCSVByID_InvalidArguments(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.service.ExportMeasurementsCSVByID(context.Background(), tc.writer, tc.runID)
+			err := tc.service.ExportMeasurementsCSVByID(context.Background(), tc.writer, tc.runID, entity.TimeRangeFilter{})
 			if err == nil {
 				t.Fatalf("expected error, got nil")
 			}
 		})
+	}
+}
+
+func TestExportMeasurementsCSVByID_PropagatesDateRangeToProvider(t *testing.T) {
+	const runID = "run-1"
+	provider := &fakePhaseMetricsProvider{
+		metricKeys: []string{"k"},
+		phaseMetricsByID: map[string][]entity.PhaseMetrics{
+			runID: []entity.PhaseMetrics{},
+		},
+	}
+	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
+
+	from := time.Date(2026, time.April, 1, 10, 0, 0, 0, time.Local)
+	to := time.Date(2026, time.April, 1, 11, 0, 0, 0, time.Local)
+
+	var out bytes.Buffer
+	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID, entity.TimeRangeFilter{From: &from, To: &to})
+	if err != nil {
+		t.Fatalf("ExportMeasurementsCSVByID() error = %v", err)
+	}
+	wantCalls := []byIDCall{
+		{runID: runID, filter: entity.TimeRangeFilter{From: &from, To: &to}},
+	}
+	if len(provider.getByIDCalls) != 1 {
+		t.Fatalf("expected one by-id provider call, got %#v", provider.getByIDCalls)
+	}
+	if !reflect.DeepEqual(provider.getByIDCalls, wantCalls) {
+		t.Fatalf("unexpected by-id calls: got=%#v want=%#v", provider.getByIDCalls, wantCalls)
 	}
 }
 
@@ -655,6 +751,25 @@ func TestOpenErrorLogWriter_CreatesParentDirectory(t *testing.T) {
 	}
 }
 
+func TestOpenErrorLogWriter_UsesDefaultConstantWhenBlank(t *testing.T) {
+	exporterService := NewExporterService(NewParserService(), &fakePhaseMetricsProvider{})
+	exporterService.errorLogPath = "   "
+
+	logWriter, err := exporterService.openErrorLogWriter()
+	if err != nil {
+		t.Fatalf("openErrorLogWriter() error = %v", err)
+	}
+	defer logWriter.Close()
+
+	if _, err := os.Stat(constant.DefaultErrorLogPath); err != nil {
+		t.Fatalf("expected default error log file to exist, got stat error: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = os.Remove(constant.DefaultErrorLogPath)
+		_ = os.Remove(filepath.Dir(constant.DefaultErrorLogPath))
+	})
+}
+
 func TestIsUnknownDimensionError_UsesSentinelErrors(t *testing.T) {
 	t.Parallel()
 
@@ -666,5 +781,21 @@ func TestIsUnknownDimensionError_UsesSentinelErrors(t *testing.T) {
 	}
 	if isUnknownDimensionError(errors.New("unknown programming language: \"pascal\"")) {
 		t.Fatalf("expected plain string error not to match sentinel-based detection")
+	}
+}
+
+func TestExportMeasurementsCSV_InvalidDateRange(t *testing.T) {
+	provider := &fakePhaseMetricsProvider{metricKeys: []string{"k"}}
+	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
+
+	from := time.Date(2026, time.April, 1, 0, 0, 0, 0, time.Local)
+	to := time.Date(2026, time.March, 31, 0, 0, 0, 0, time.Local)
+
+	var out bytes.Buffer
+	if err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 1, entity.TimeRangeFilter{From: &from}); err == nil {
+		t.Fatalf("expected partial bounds error")
+	}
+	if err := exporterService.ExportMeasurementsCSV(context.Background(), &out, 1, entity.TimeRangeFilter{From: &from, To: &to}); err == nil {
+		t.Fatalf("expected inverted bounds error")
 	}
 }

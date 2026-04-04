@@ -3,9 +3,9 @@ package cli
 import (
 	"path/filepath"
 	"strings"
-)
 
-const defaultCSVFilename = "measurements.csv"
+	"mthesis/kwa/internal/constant"
+)
 
 // buildOutputPath applies the interactive filename rules and returns the final path.
 // Rule order:
@@ -26,7 +26,7 @@ func buildOutputPath(input string) string {
 func normalizeCSVFilename(input string) string {
 	trimmed := strings.TrimSpace(input)
 	if trimmed == "" {
-		return defaultCSVFilename
+		return constant.DefaultCSVFilename
 	}
 	if strings.HasSuffix(strings.ToLower(trimmed), ".csv") {
 		return trimmed

@@ -3,8 +3,6 @@ package cli
 import (
 	"fmt"
 	"strings"
-
-	"github.com/charmbracelet/lipgloss"
 )
 
 const batLogo = `
@@ -31,21 +29,14 @@ func (m model) View() string {
 		content = ""
 	}
 
-	rendered := tuiStyles.doc.Render(content)
-	if m.width <= 0 || m.height <= 0 {
-		return rendered
-	}
-
-	// Place content in a full terminal-sized frame so old characters are erased
-	// when switching between screens with different line lengths.
-	return lipgloss.Place(m.width, m.height, lipgloss.Left, lipgloss.Top, rendered)
+	return tuiStyles.doc.Render(content)
 }
 
 func (m model) viewMenu() string {
 	panelWidth := m.panelWidth()
 	logo := m.renderMenuLogo(panelWidth)
 	items := []string{}
-	labels := []string{"batch export", "byID"}
+	labels := []string{"batch export", "byID export"}
 	for i, label := range labels {
 		line := "  " + truncateText(label, panelWidth-8)
 		if menuOption(i) == m.selected {
@@ -69,7 +60,7 @@ func (m model) viewMenu() string {
 		tuiStyles.title.Render("KWA // Green Metrics CLI"),
 		tuiStyles.subtitle.Render("Pick an export flow to continue"),
 		tuiStyles.panel.Width(panelWidth).Render(body),
-		tuiStyles.hint.Render("↑/↓ move • Enter select • mouse wheel • q quit"),
+		tuiStyles.hint.Render("↑/↓ move • Enter select • q quit"),
 	}, "\n")
 }
 
@@ -147,13 +138,11 @@ func (m model) renderFieldValue(index int, panelWidth int) string {
 
 func (m model) viewRunning() string {
 	panelWidth := m.panelWidth()
-	spinner := spinnerFrames[m.spinnerIndex]
-	message := fmt.Sprintf("%s Export in progress", spinner)
+	message := fmt.Sprintf("%s Export in progress", m.spinner.View())
 
 	body := strings.Join([]string{
 		tuiStyles.sectionTitle.Render("Running"),
-		"",
-		tuiStyles.spinner.Render(message),
+		message,
 		"",
 		tuiStyles.label.Render(fmt.Sprintf("mode: %s", m.runningReq.Mode)),
 		tuiStyles.label.Render(fmt.Sprintf("output: %s", truncateText(m.runningReq.OutPath, panelWidth-12))),

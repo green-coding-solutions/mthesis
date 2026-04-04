@@ -1,5 +1,7 @@
 # Towards a More Accurate Understanding of Programming Language Energy Efficiency
 
+Agent docs: [AGENTS.md](AGENTS.md) for repo overview and [kwa/AGENTS.md](kwa/AGENTS.md) for deep KWA architecture/workflows.
+
 ## Linux Setup (Ubuntu 22.04/24.04)
 
 Use `make setup` to bootstrap the full local environment (Linux only):

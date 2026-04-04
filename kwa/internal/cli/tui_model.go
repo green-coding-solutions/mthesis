@@ -8,6 +8,7 @@ import (
 	appexport "mthesis/kwa/internal/app/export"
 	"mthesis/kwa/internal/constant"
 
+	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -27,8 +28,6 @@ const (
 	menuByID
 )
 
-var spinnerFrames = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
-
 type fieldSpec struct {
 	label       string
 	placeholder string
@@ -44,8 +43,6 @@ type exportDoneMsg struct {
 	err  error
 }
 
-type spinnerTickMsg struct{}
-
 type model struct {
 	ctx      context.Context
 	executor executeRequestFunc
@@ -59,7 +56,7 @@ type model struct {
 
 	validationErr string
 	runningReq    appexport.Request
-	spinnerIndex  int
+	spinner       spinner.Model
 
 	resultPath string
 	resultErr  error
@@ -100,7 +97,17 @@ func newModel(ctx context.Context, execute executeRequestFunc) model {
 		state:    screenMenu,
 		selected: menuBatch,
 		formMode: constant.ExportModeBatch,
+		spinner:  newSpinnerModel(),
 	}
+}
+
+// newSpinnerModel creates the running-screen spinner with shared CLI styling.
+func newSpinnerModel() spinner.Model {
+	s := spinner.New()
+	// MiniDot keeps a single-cell frame width and avoids wrap artifacts.
+	s.Spinner = spinner.MiniDot
+	s.Style = tuiStyles.spinner
+	return s
 }
 
 func (m model) Init() tea.Cmd {
@@ -113,6 +120,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = event.Width
 		m.height = event.Height
 		return m, nil
+	case tea.MouseMsg:
+		// Ignore all mouse input globally (wheel, click, movement).
+		return m, nil
 	case exportDoneMsg:
 		m.state = screenResult
 		m.resultPath = event.path
@@ -122,12 +132,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.finalErr = event.err
 		}
 		return m, tea.ClearScreen
-	case spinnerTickMsg:
-		if m.state != screenRunning {
-			return m, nil
-		}
-		m.spinnerIndex = (m.spinnerIndex + 1) % len(spinnerFrames)
-		return m, spinnerTickCmd()
 	}
 
 	switch m.state {
@@ -136,7 +140,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case screenForm:
 		return m.updateForm(msg)
 	case screenRunning:
-		return m.updateRunning(msg)
+		updatedModel, runningCmd := m.updateRunning(msg)
+		updated, ok := updatedModel.(model)
+		if !ok {
+			return updatedModel, runningCmd
+		}
+
+		// Only tick messages should advance the spinner animation.
+		if _, isTick := msg.(spinner.TickMsg); !isTick {
+			return updated, runningCmd
+		}
+
+		var spinnerCmd tea.Cmd
+		updated.spinner, spinnerCmd = updated.spinner.Update(msg)
+		return updated, tea.Batch(runningCmd, spinnerCmd)
 	case screenResult:
 		return m.updateResult(msg)
 	default:

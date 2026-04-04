@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"mthesis/kwa/internal/constant"
 	"mthesis/kwa/internal/entity"
@@ -30,8 +31,8 @@ type batchFetchResult struct {
 // PhaseMetricsBatchProvider is the data dependency needed for CSV export.
 type PhaseMetricsBatchProvider interface {
 	GetMetricKeys(ctx context.Context) ([]string, error)
-	GetPhaseMetricsBatch(ctx context.Context, limit, offset int) ([]entity.PhaseMetrics, error)
-	GetPhaseMetricsByID(ctx context.Context, runID string) ([]entity.PhaseMetrics, error)
+	GetPhaseMetricsBatch(ctx context.Context, limit, offset int, filter entity.TimeRangeFilter) ([]entity.PhaseMetrics, error)
+	GetPhaseMetricsByID(ctx context.Context, runID string, filter entity.TimeRangeFilter) ([]entity.PhaseMetrics, error)
 }
 
 // NewExporterService builds an exporter service with parser defaults and data source dependencies.
@@ -43,19 +44,28 @@ func NewExporterService(parserService *ParserService, phaseMetricsSource PhaseMe
 	return &ExporterService{
 		parserService:      parserService,
 		phaseMetricsSource: phaseMetricsSource,
-		errorLogPath:       "logs/error_logs.txt",
+		errorLogPath:       constant.DefaultErrorLogPath,
 	}
 }
 
 // ExportMeasurementsCSV streams measurements to CSV in paginated batches.
-// Header layout is fixed: run_id,language,benchmark,<metric keys...>.
-func (s *ExporterService) ExportMeasurementsCSV(ctx context.Context, w io.Writer, batchSize int) error {
+// Header layout is fixed: run_id,measured_at,language,benchmark,<metric keys...>.
+func (s *ExporterService) ExportMeasurementsCSV(
+	ctx context.Context,
+	w io.Writer,
+	batchSize int,
+	filter entity.TimeRangeFilter,
+) error {
 	if err := s.validateWriterAndProvider(w); err != nil {
 		return err
 	}
 	if batchSize <= 0 {
 		return fmt.Errorf("batch size must be greater than zero")
 	}
+	if err := filter.Validate(); err != nil {
+		return err
+	}
+	filter = filter.Clone()
 
 	csvWriter, metricKeys, err := s.newCSVWriterWithHeader(ctx, w)
 	if err != nil {
@@ -72,7 +82,7 @@ func (s *ExporterService) ExportMeasurementsCSV(ctx context.Context, w io.Writer
 
 	offset := 0
 	// Prime the pipeline with the first batch fetch.
-	nextBatchResult := s.fetchPhaseMetricsBatchAsync(ctx, batchSize, offset)
+	nextBatchResult := s.fetchPhaseMetricsBatchAsync(ctx, batchSize, offset, filter)
 	for {
 		// Wait for the batch that was prefetched in the previous iteration.
 		result := <-nextBatchResult
@@ -88,7 +98,7 @@ func (s *ExporterService) ExportMeasurementsCSV(ctx context.Context, w io.Writer
 		nextOffset := offset + len(phaseMetricsBatch)
 		// Start fetching the next batch before writing the current one so DB I/O
 		// can overlap with CSV parsing/writing while preserving row order.
-		nextBatchResult = s.fetchPhaseMetricsBatchAsync(ctx, batchSize, nextOffset)
+		nextBatchResult = s.fetchPhaseMetricsBatchAsync(ctx, batchSize, nextOffset, filter)
 
 		// Keep all writes on this goroutine; csv.Writer and error log are not shared.
 		if err := s.writePhaseMetricsRows(csvWriter, phaseMetricsBatch, metricKeys, errorLog); err != nil {
@@ -106,14 +116,23 @@ func (s *ExporterService) ExportMeasurementsCSV(ctx context.Context, w io.Writer
 }
 
 // ExportMeasurementsCSVByID writes measurements to CSV for a single run ID.
-// Header layout is fixed: run_id,language,benchmark,<metric keys...>.
-func (s *ExporterService) ExportMeasurementsCSVByID(ctx context.Context, w io.Writer, runID string) error {
+// Header layout is fixed: run_id,measured_at,language,benchmark,<metric keys...>.
+func (s *ExporterService) ExportMeasurementsCSVByID(
+	ctx context.Context,
+	w io.Writer,
+	runID string,
+	filter entity.TimeRangeFilter,
+) error {
 	if err := s.validateWriterAndProvider(w); err != nil {
 		return err
 	}
 	if strings.TrimSpace(runID) == "" {
 		return fmt.Errorf("runID must not be empty")
 	}
+	if err := filter.Validate(); err != nil {
+		return err
+	}
+	filter = filter.Clone()
 
 	csvWriter, metricKeys, err := s.newCSVWriterWithHeader(ctx, w)
 	if err != nil {
@@ -125,7 +144,7 @@ func (s *ExporterService) ExportMeasurementsCSVByID(ctx context.Context, w io.Wr
 	}
 	defer errorLog.Close()
 
-	phaseMetricsByID, err := s.phaseMetricsSource.GetPhaseMetricsByID(ctx, runID)
+	phaseMetricsByID, err := s.phaseMetricsSource.GetPhaseMetricsByID(ctx, runID, filter)
 	if err != nil {
 		return fmt.Errorf("load phase metrics for run %q: %w", runID, err)
 	}
@@ -160,7 +179,7 @@ func (s *ExporterService) newCSVWriterWithHeader(ctx context.Context, w io.Write
 	}
 
 	csvWriter := csv.NewWriter(w)
-	header := append([]string{"run_id", "language", "benchmark"}, metricKeys...)
+	header := append([]string{"run_id", "measured_at", "language", "benchmark"}, metricKeys...)
 	if err := csvWriter.Write(header); err != nil {
 		return nil, nil, fmt.Errorf("write csv header: %w", err)
 	}
@@ -175,7 +194,7 @@ func (s *ExporterService) newCSVWriterWithHeader(ctx context.Context, w io.Write
 func (s *ExporterService) openErrorLogWriter() (io.WriteCloser, error) {
 	errorLogPath := strings.TrimSpace(s.errorLogPath)
 	if errorLogPath == "" {
-		errorLogPath = "logs/error_logs.txt"
+		errorLogPath = constant.DefaultErrorLogPath
 	}
 
 	errorLogDir := filepath.Dir(errorLogPath)
@@ -215,10 +234,14 @@ func (s *ExporterService) writePhaseMetricsRows(csvWriter *csv.Writer, phaseMetr
 }
 
 // fetchPhaseMetricsBatchAsync fetches a batch in a goroutine and returns a one-shot result channel.
-func (s *ExporterService) fetchPhaseMetricsBatchAsync(ctx context.Context, batchSize, offset int) <-chan batchFetchResult {
+func (s *ExporterService) fetchPhaseMetricsBatchAsync(
+	ctx context.Context,
+	batchSize, offset int,
+	filter entity.TimeRangeFilter,
+) <-chan batchFetchResult {
 	resultCh := make(chan batchFetchResult, 1)
 	go func() {
-		phaseMetrics, err := s.phaseMetricsSource.GetPhaseMetricsBatch(ctx, batchSize, offset)
+		phaseMetrics, err := s.phaseMetricsSource.GetPhaseMetricsBatch(ctx, batchSize, offset, filter)
 		if err != nil {
 			err = fmt.Errorf("load phase metrics batch at offset %d: %w", offset, err)
 		}
@@ -254,8 +277,8 @@ func logSkippedPhase(w io.Writer, phaseMetrics entity.PhaseMetrics, parseErr err
 
 // measurementToCSVRow writes known scalar columns first, then one cell per metric key.
 func measurementToCSVRow(m entity.Measurement, metricKeys []string) []string {
-	row := make([]string, 0, 3+len(metricKeys))
-	row = append(row, m.RunID, m.Language, m.Benchmark)
+	row := make([]string, 0, 4+len(metricKeys))
+	row = append(row, m.RunID, formatMeasuredAt(m.MeasuredAt), m.Language, m.Benchmark)
 	for _, key := range metricKeys {
 		if value, ok := m.Metrics[key]; ok {
 			row = append(row, strconv.FormatInt(value, 10))
@@ -265,4 +288,13 @@ func measurementToCSVRow(m entity.Measurement, metricKeys []string) []string {
 	}
 
 	return row
+}
+
+// formatMeasuredAt renders local timestamp values for CSV output.
+func formatMeasuredAt(measuredAt time.Time) string {
+	if measuredAt.IsZero() {
+		return ""
+	}
+
+	return measuredAt.Local().Format(time.DateTime)
 }

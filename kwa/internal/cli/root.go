@@ -36,6 +36,7 @@ func Execute() {
 	}
 }
 
+// defaultDependencies wires the production executor and interactive runner.
 func defaultDependencies() rootDependencies {
 	executor := appexport.NewExecutor()
 	return rootDependencies{
@@ -44,6 +45,7 @@ func defaultDependencies() rootDependencies {
 	}
 }
 
+// newRootCmd builds the root CLI command and registers interactive and subcommand flows.
 func newRootCmd(deps rootDependencies) *cobra.Command {
 	if deps.execute == nil {
 		deps.execute = appexport.NewExecutor().Execute
@@ -69,20 +71,29 @@ func newRootCmd(deps rootDependencies) *cobra.Command {
 	return rootCmd
 }
 
+// newBatchCmd builds the non-interactive batch export command.
 func newBatchCmd(execute executeRequestFunc) *cobra.Command {
 	var (
 		batchSize int
 		outPath   string
+		fromInput string
+		toInput   string
 	)
 
 	batchCmd := &cobra.Command{
 		Use:   "batch",
 		Short: "Export measurements in paginated batches",
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			timeRange, err := appexport.ParseTimeRange(fromInput, toInput)
+			if err != nil {
+				return err
+			}
+
 			req := appexport.Request{
 				Mode:      constant.ExportModeBatch,
 				BatchSize: batchSize,
 				OutPath:   outPath,
+				TimeRange: timeRange,
 			}
 			if err := execute(cmd.Context(), req); err != nil {
 				return err
@@ -95,13 +106,18 @@ func newBatchCmd(execute executeRequestFunc) *cobra.Command {
 
 	batchCmd.Flags().IntVar(&batchSize, "batch-size", constant.DefaultBatchSize, "rows per batch")
 	batchCmd.Flags().StringVar(&outPath, "out", constant.DefaultOutPath, "output CSV file path")
+	batchCmd.Flags().StringVar(&fromInput, "from", "", "start timestamp (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)")
+	batchCmd.Flags().StringVar(&toInput, "to", "", "end timestamp (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)")
 	return batchCmd
 }
 
+// newByIDCmd builds the non-interactive single-run export command.
 func newByIDCmd(execute executeRequestFunc) *cobra.Command {
 	var (
-		runID   string
-		outPath string
+		runID     string
+		outPath   string
+		fromInput string
+		toInput   string
 	)
 
 	byIDCmd := &cobra.Command{
@@ -109,10 +125,16 @@ func newByIDCmd(execute executeRequestFunc) *cobra.Command {
 		Aliases: []string{"byID"},
 		Short:   "Export measurements for one run ID",
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			timeRange, err := appexport.ParseTimeRange(fromInput, toInput)
+			if err != nil {
+				return err
+			}
+
 			req := appexport.Request{
-				Mode:    constant.ExportModeByID,
-				RunID:   runID,
-				OutPath: outPath,
+				Mode:      constant.ExportModeByID,
+				RunID:     runID,
+				OutPath:   outPath,
+				TimeRange: timeRange,
 			}
 			if err := execute(cmd.Context(), req); err != nil {
 				return err
@@ -125,6 +147,8 @@ func newByIDCmd(execute executeRequestFunc) *cobra.Command {
 
 	byIDCmd.Flags().StringVar(&runID, "run-id", "", "run ID to export")
 	byIDCmd.Flags().StringVar(&outPath, "out", constant.DefaultOutPath, "output CSV file path")
+	byIDCmd.Flags().StringVar(&fromInput, "from", "", "start timestamp (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)")
+	byIDCmd.Flags().StringVar(&toInput, "to", "", "end timestamp (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)")
 	_ = byIDCmd.MarkFlagRequired("run-id")
 
 	return byIDCmd

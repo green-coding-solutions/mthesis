@@ -12,6 +12,7 @@ import (
 	"mthesis/kwa/internal/config"
 	"mthesis/kwa/internal/constant"
 	"mthesis/kwa/internal/data"
+	"mthesis/kwa/internal/entity"
 	"mthesis/kwa/internal/service"
 )
 
@@ -23,8 +24,8 @@ type DataService interface {
 
 // CLIHandler defines the API operations used by orchestration.
 type CLIHandler interface {
-	ExportBatch(ctx context.Context, w io.Writer, batchSize int) error
-	ExportByID(ctx context.Context, w io.Writer, runID string) error
+	ExportBatch(ctx context.Context, w io.Writer, batchSize int, filter entity.TimeRangeFilter) error
+	ExportByID(ctx context.Context, w io.Writer, runID string, filter entity.TimeRangeFilter) error
 }
 
 // Dependencies defines overridable constructors used to build runtime dependencies.
@@ -75,6 +76,7 @@ func NewExecutorWithDeps(deps Dependencies) *Executor {
 	return &Executor{deps: deps}
 }
 
+// defaultDependencies returns production constructors used by export orchestration.
 func defaultDependencies() Dependencies {
 	return Dependencies{
 		LoadDatabaseConfig: config.LoadDatabaseConfig,
@@ -128,11 +130,11 @@ func (e *Executor) Execute(ctx context.Context, req Request) error {
 
 	switch normalizedReq.Mode {
 	case constant.ExportModeBatch:
-		if err := handler.ExportBatch(ctx, outFile, normalizedReq.BatchSize); err != nil {
+		if err := handler.ExportBatch(ctx, outFile, normalizedReq.BatchSize, normalizedReq.TimeRange); err != nil {
 			return fmt.Errorf("batch export failed: %w", err)
 		}
 	case constant.ExportModeByID:
-		if err := handler.ExportByID(ctx, outFile, normalizedReq.RunID); err != nil {
+		if err := handler.ExportByID(ctx, outFile, normalizedReq.RunID, normalizedReq.TimeRange); err != nil {
 			return fmt.Errorf("single-run export failed: %w", err)
 		}
 	default:
@@ -142,6 +144,7 @@ func (e *Executor) Execute(ctx context.Context, req Request) error {
 	return nil
 }
 
+// writeWarning prints non-fatal cleanup warnings to stderr when available.
 func (e *Executor) writeWarning(format string, args ...any) {
 	if e.deps.Stderr == nil {
 		return
@@ -150,11 +153,18 @@ func (e *Executor) writeWarning(format string, args ...any) {
 	_, _ = fmt.Fprintf(e.deps.Stderr, format, args...)
 }
 
+// validateAndNormalizeRequest applies defaults and validates export request invariants.
 func validateAndNormalizeRequest(req Request) (Request, error) {
 	req.OutPath = strings.TrimSpace(req.OutPath)
 	if req.OutPath == "" {
 		req.OutPath = constant.DefaultOutPath
 	}
+
+	if err := req.TimeRange.Validate(); err != nil {
+		return Request{}, err
+	}
+
+	req.TimeRange = req.TimeRange.Clone()
 
 	switch req.Mode {
 	case constant.ExportModeBatch:
@@ -173,6 +183,7 @@ func validateAndNormalizeRequest(req Request) (Request, error) {
 	return req, nil
 }
 
+// createOutputFile ensures parent directories exist and truncates/creates target file.
 func createOutputFile(path string) (*os.File, error) {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return nil, fmt.Errorf("create output directory for %q: %w", path, err)

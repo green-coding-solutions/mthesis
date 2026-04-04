@@ -45,10 +45,11 @@ func (s *ParserService) ParseMeasurementFromPhase(pm entity.PhaseMetrics) (entit
 	}
 
 	return entity.Measurement{
-		RunID:     pm.RunID,
-		Language:  string(language),
-		Benchmark: string(benchmark),
-		Metrics:   cloneMetrics(pm.Metrics),
+		RunID:      pm.RunID,
+		MeasuredAt: pm.MeasuredAt,
+		Language:   string(language),
+		Benchmark:  string(benchmark),
+		Metrics:    cloneMetrics(pm.Metrics),
 	}, nil
 }
 

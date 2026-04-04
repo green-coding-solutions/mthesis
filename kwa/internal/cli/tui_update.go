@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	appexport "mthesis/kwa/internal/app/export"
 	"mthesis/kwa/internal/constant"
@@ -13,27 +12,17 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// updateMenu handles menu-screen keyboard events.
 func (m model) updateMenu(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch event := msg.(type) {
 	case tea.KeyMsg:
 		return m.handleMenuKey(event)
-	case tea.MouseMsg:
-		mouse := strings.ToLower(event.String())
-		switch {
-		case strings.Contains(mouse, "wheelup"):
-			m.moveMenu(-1)
-		case strings.Contains(mouse, "wheeldown"):
-			m.moveMenu(1)
-		case strings.Contains(mouse, "left"):
-			m.startFormForSelected()
-			// Force a clean frame when switching screens via mouse input.
-			return m, tea.ClearScreen
-		}
 	}
 
 	return m, nil
 }
 
+// handleMenuKey applies menu navigation and selection keybindings.
 func (m model) handleMenuKey(key tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch key.Type {
 	case tea.KeyCtrlC:
@@ -57,6 +46,7 @@ func (m model) handleMenuKey(key tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// moveMenu updates the selected menu item using circular navigation.
 func (m *model) moveMenu(delta int) {
 	menuCount := 2
 	next := (int(m.selected) + delta + menuCount) % menuCount
@@ -89,29 +79,50 @@ func (m *model) initForm(mode constant.ExportMode) {
 				value: strconv.Itoa(constant.DefaultBatchSize),
 			},
 			{
-				spec:  fieldSpec{label: "fileName", placeholder: defaultCSVFilename},
-				value: defaultCSVFilename,
+				spec:  fieldSpec{label: "From timestamp (optional)", placeholder: "YYYY-MM-DD or YYYY-MM-DD HH:MM:SS"},
+				value: "",
+			},
+			{
+				spec:  fieldSpec{label: "To timestamp (optional)", placeholder: "YYYY-MM-DD or YYYY-MM-DD HH:MM:SS"},
+				value: "",
+			},
+			{
+				spec:  fieldSpec{label: "fileName", placeholder: constant.DefaultCSVFilename},
+				value: constant.DefaultCSVFilename,
 			},
 		}
 	case constant.ExportModeByID:
-		m.formTitle = "Export by ID"
+		m.formTitle = "byID Export"
 		m.fields = []fieldState{
 			{
 				spec:  fieldSpec{label: "Run ID", placeholder: "paste run ID"},
 				value: "",
 			},
 			{
-				spec:  fieldSpec{label: "fileName", placeholder: defaultCSVFilename},
-				value: defaultCSVFilename,
+				spec:  fieldSpec{label: "From timestamp (optional)", placeholder: "YYYY-MM-DD or YYYY-MM-DD HH:MM:SS"},
+				value: "",
+			},
+			{
+				spec:  fieldSpec{label: "To timestamp (optional)", placeholder: "YYYY-MM-DD or YYYY-MM-DD HH:MM:SS"},
+				value: "",
+			},
+			{
+				spec:  fieldSpec{label: "fileName", placeholder: constant.DefaultCSVFilename},
+				value: constant.DefaultCSVFilename,
 			},
 		}
 	}
 }
 
+// updateForm handles key input for interactive export form fields.
 func (m model) updateForm(msg tea.Msg) (tea.Model, tea.Cmd) {
 	key, ok := msg.(tea.KeyMsg)
 	if !ok {
 		return m, nil
+	}
+
+	if key.String() == "q" && !m.allowsLiteralQInput() {
+		return m, tea.Quit
 	}
 
 	switch key.Type {
@@ -133,6 +144,10 @@ func (m model) updateForm(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.removeLastRune()
 		m.validationErr = ""
 		return m, nil
+	case tea.KeySpace:
+		m.appendRunes(" ")
+		m.validationErr = ""
+		return m, nil
 	case tea.KeyRunes:
 		m.appendRunes(string(key.Runes))
 		m.validationErr = ""
@@ -140,8 +155,6 @@ func (m model) updateForm(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	switch key.String() {
-	case "q":
-		return m, tea.Quit
 	case "ctrl+u":
 		m.clearFocusedField()
 		m.validationErr = ""
@@ -151,6 +164,17 @@ func (m model) updateForm(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 }
 
+// allowsLiteralQInput reports whether the focused field should treat `q` as text.
+func (m model) allowsLiteralQInput() bool {
+	if m.focus < 0 || m.focus >= len(m.fields) {
+		return false
+	}
+
+	label := m.fields[m.focus].spec.label
+	return label == "fileName" || label == "Run ID"
+}
+
+// moveFocus changes focused form input using circular navigation.
 func (m *model) moveFocus(delta int) {
 	if len(m.fields) == 0 {
 		return
@@ -160,6 +184,7 @@ func (m *model) moveFocus(delta int) {
 	m.focus = next
 }
 
+// appendRunes appends typed text to the currently focused field.
 func (m *model) appendRunes(value string) {
 	if len(m.fields) == 0 {
 		return
@@ -167,6 +192,7 @@ func (m *model) appendRunes(value string) {
 	m.fields[m.focus].value += value
 }
 
+// removeLastRune deletes the last rune from the focused field value.
 func (m *model) removeLastRune() {
 	if len(m.fields) == 0 {
 		return
@@ -181,6 +207,7 @@ func (m *model) removeLastRune() {
 	m.fields[m.focus].value = string(runes[:len(runes)-1])
 }
 
+// clearFocusedField clears the currently focused form input value.
 func (m *model) clearFocusedField() {
 	if len(m.fields) == 0 {
 		return
@@ -199,13 +226,12 @@ func (m model) startExportFromForm() (tea.Model, tea.Cmd) {
 
 	m.state = screenRunning
 	m.runningReq = req
-	m.spinnerIndex = 0
+	m.spinner = newSpinnerModel()
 	m.validationErr = ""
 
 	return m, tea.Batch(
-		tea.ClearScreen,
 		runExportCmd(m.ctx, m.executor, req),
-		spinnerTickCmd(),
+		m.spinner.Tick,
 	)
 }
 
@@ -223,11 +249,17 @@ func (m model) buildRequestFromForm() (appexport.Request, error) {
 			batchSize = parsed
 		}
 
-		outPath := buildOutputPath(m.fields[1].value)
+		timeRange, err := appexport.ParseTimeRange(m.fields[1].value, m.fields[2].value)
+		if err != nil {
+			return appexport.Request{}, err
+		}
+
+		outPath := buildOutputPath(m.fields[3].value)
 		return appexport.Request{
 			Mode:      constant.ExportModeBatch,
 			BatchSize: batchSize,
 			OutPath:   outPath,
+			TimeRange: timeRange,
 		}, nil
 	case constant.ExportModeByID:
 		runID := strings.TrimSpace(m.fields[0].value)
@@ -235,17 +267,24 @@ func (m model) buildRequestFromForm() (appexport.Request, error) {
 			return appexport.Request{}, fmt.Errorf("run ID is required")
 		}
 
-		outPath := buildOutputPath(m.fields[1].value)
+		timeRange, err := appexport.ParseTimeRange(m.fields[1].value, m.fields[2].value)
+		if err != nil {
+			return appexport.Request{}, err
+		}
+
+		outPath := buildOutputPath(m.fields[3].value)
 		return appexport.Request{
-			Mode:    constant.ExportModeByID,
-			RunID:   runID,
-			OutPath: outPath,
+			Mode:      constant.ExportModeByID,
+			RunID:     runID,
+			OutPath:   outPath,
+			TimeRange: timeRange,
 		}, nil
 	default:
 		return appexport.Request{}, fmt.Errorf("unsupported form mode %q", m.formMode)
 	}
 }
 
+// runExportCmd executes one export request and emits a completion message.
 func runExportCmd(ctx context.Context, execute executeRequestFunc, req appexport.Request) tea.Cmd {
 	return func() tea.Msg {
 		err := execute(ctx, req)
@@ -253,12 +292,7 @@ func runExportCmd(ctx context.Context, execute executeRequestFunc, req appexport
 	}
 }
 
-func spinnerTickCmd() tea.Cmd {
-	return tea.Tick(90*time.Millisecond, func(time.Time) tea.Msg {
-		return spinnerTickMsg{}
-	})
-}
-
+// updateRunning handles quit input while export execution is in progress.
 func (m model) updateRunning(msg tea.Msg) (tea.Model, tea.Cmd) {
 	key, ok := msg.(tea.KeyMsg)
 	if !ok {
@@ -272,14 +306,11 @@ func (m model) updateRunning(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// updateResult handles exit actions from the final result screen.
 func (m model) updateResult(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch event := msg.(type) {
 	case tea.KeyMsg:
 		if event.Type == tea.KeyCtrlC || event.Type == tea.KeyEnter || event.String() == "q" {
-			return m, tea.Quit
-		}
-	case tea.MouseMsg:
-		if strings.Contains(strings.ToLower(event.String()), "left") {
 			return m, tea.Quit
 		}
 	}

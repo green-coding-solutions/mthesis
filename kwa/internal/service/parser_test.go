@@ -4,6 +4,7 @@ import (
 	"errors"
 	"reflect"
 	"testing"
+	"time"
 
 	"mthesis/kwa/internal/constant"
 	"mthesis/kwa/internal/entity"
@@ -13,31 +14,34 @@ func TestParseMeasurementFromPhase(t *testing.T) {
 	parserService := NewParserService()
 
 	tests := []struct {
-		name          string
-		input         entity.PhaseMetrics
-		wantRunID     string
-		wantLanguage  string
-		wantBenchmark string
-		wantMetrics   map[string]int64
-		wantErr       bool
+		name           string
+		input          entity.PhaseMetrics
+		wantRunID      string
+		wantMeasuredAt time.Time
+		wantLanguage   string
+		wantBenchmark  string
+		wantMetrics    map[string]int64
+		wantErr        bool
 	}{
 		{
-			name:          "parses go binary trees",
-			input:         entity.PhaseMetrics{RunID: "run-1", Phase: "005_Go-Binary-Trees", Metrics: map[string]int64{"cpu_time_powermetrics_vm-docker_vm-ns": 47560725453}},
-			wantRunID:     "run-1",
-			wantLanguage:  "go",
-			wantBenchmark: "binary-trees",
-			wantMetrics:   map[string]int64{"cpu_time_powermetrics_vm-docker_vm-ns": 47560725453},
-			wantErr:       false,
+			name:           "parses go binary trees",
+			input:          entity.PhaseMetrics{RunID: "run-1", MeasuredAt: time.Date(2026, time.April, 1, 12, 0, 0, 0, time.Local), Phase: "005_Go-Binary-Trees", Metrics: map[string]int64{"cpu_time_powermetrics_vm-docker_vm-ns": 47560725453}},
+			wantRunID:      "run-1",
+			wantMeasuredAt: time.Date(2026, time.April, 1, 12, 0, 0, 0, time.Local),
+			wantLanguage:   "go",
+			wantBenchmark:  "binary-trees",
+			wantMetrics:    map[string]int64{"cpu_time_powermetrics_vm-docker_vm-ns": 47560725453},
+			wantErr:        false,
 		},
 		{
-			name:          "parses lowercase with multi-word benchmark",
-			input:         entity.PhaseMetrics{RunID: "run-2", Phase: "009_python-regex-redux", Metrics: map[string]int64{"gpu_carbon_powermetrics_component-component-ug": 13}},
-			wantRunID:     "run-2",
-			wantLanguage:  "python",
-			wantBenchmark: "regex-redux",
-			wantMetrics:   map[string]int64{"gpu_carbon_powermetrics_component-component-ug": 13},
-			wantErr:       false,
+			name:           "parses lowercase with multi-word benchmark",
+			input:          entity.PhaseMetrics{RunID: "run-2", MeasuredAt: time.Date(2026, time.April, 2, 13, 0, 0, 0, time.Local), Phase: "009_python-regex-redux", Metrics: map[string]int64{"gpu_carbon_powermetrics_component-component-ug": 13}},
+			wantRunID:      "run-2",
+			wantMeasuredAt: time.Date(2026, time.April, 2, 13, 0, 0, 0, time.Local),
+			wantLanguage:   "python",
+			wantBenchmark:  "regex-redux",
+			wantMetrics:    map[string]int64{"gpu_carbon_powermetrics_component-component-ug": 13},
+			wantErr:        false,
 		},
 		{
 			name:    "fails on invalid phase format",
@@ -80,6 +84,9 @@ func TestParseMeasurementFromPhase(t *testing.T) {
 			}
 			if got.RunID != tt.wantRunID {
 				t.Fatalf("run_id mismatch: got %q want %q", got.RunID, tt.wantRunID)
+			}
+			if !got.MeasuredAt.Equal(tt.wantMeasuredAt) {
+				t.Fatalf("created_at mismatch: got %v want %v", got.MeasuredAt, tt.wantMeasuredAt)
 			}
 			if got.Language != tt.wantLanguage {
 				t.Fatalf("language mismatch: got %q want %q", got.Language, tt.wantLanguage)

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"mthesis/kwa/internal/api"
 	"mthesis/kwa/internal/config"
@@ -26,11 +27,11 @@ func (f *fakeDataService) GetMetricKeys(context.Context) ([]string, error) {
 	return []string{"k"}, nil
 }
 
-func (f *fakeDataService) GetPhaseMetricsBatch(context.Context, int, int) ([]entity.PhaseMetrics, error) {
+func (f *fakeDataService) GetPhaseMetricsBatch(context.Context, int, int, entity.TimeRangeFilter) ([]entity.PhaseMetrics, error) {
 	return []entity.PhaseMetrics{}, nil
 }
 
-func (f *fakeDataService) GetPhaseMetricsByID(context.Context, string) ([]entity.PhaseMetrics, error) {
+func (f *fakeDataService) GetPhaseMetricsByID(context.Context, string, entity.TimeRangeFilter) ([]entity.PhaseMetrics, error) {
 	return []entity.PhaseMetrics{}, nil
 }
 
@@ -40,29 +41,45 @@ func (f *fakeDataService) Close() error {
 }
 
 type fakeCLIHandler struct {
-	batchCalls []int
-	byIDCalls  []string
+	batchCalls []batchCall
+	byIDCalls  []byIDCall
 	batchErr   error
 	byIDErr    error
 }
 
-func (f *fakeCLIHandler) ExportBatch(_ context.Context, _ io.Writer, batchSize int) error {
-	f.batchCalls = append(f.batchCalls, batchSize)
+type batchCall struct {
+	batchSize int
+	filter    entity.TimeRangeFilter
+}
+
+type byIDCall struct {
+	runID  string
+	filter entity.TimeRangeFilter
+}
+
+func (f *fakeCLIHandler) ExportBatch(_ context.Context, _ io.Writer, batchSize int, filter entity.TimeRangeFilter) error {
+	f.batchCalls = append(f.batchCalls, batchCall{
+		batchSize: batchSize,
+		filter:    filter.Clone(),
+	})
 	return f.batchErr
 }
 
-func (f *fakeCLIHandler) ExportByID(_ context.Context, _ io.Writer, runID string) error {
-	f.byIDCalls = append(f.byIDCalls, runID)
+func (f *fakeCLIHandler) ExportByID(_ context.Context, _ io.Writer, runID string, filter entity.TimeRangeFilter) error {
+	f.byIDCalls = append(f.byIDCalls, byIDCall{
+		runID:  runID,
+		filter: filter.Clone(),
+	})
 	return f.byIDErr
 }
 
 type fakeExporter struct{}
 
-func (fakeExporter) ExportMeasurementsCSV(context.Context, io.Writer, int) error {
+func (fakeExporter) ExportMeasurementsCSV(context.Context, io.Writer, int, entity.TimeRangeFilter) error {
 	return nil
 }
 
-func (fakeExporter) ExportMeasurementsCSVByID(context.Context, io.Writer, string) error {
+func (fakeExporter) ExportMeasurementsCSVByID(context.Context, io.Writer, string, entity.TimeRangeFilter) error {
 	return nil
 }
 
@@ -105,8 +122,11 @@ func TestExecuteBatch_Success(t *testing.T) {
 	if !dataService.closed {
 		t.Fatalf("expected data service close")
 	}
-	if len(handler.batchCalls) != 1 || handler.batchCalls[0] != 17 {
+	if len(handler.batchCalls) != 1 || handler.batchCalls[0].batchSize != 17 {
 		t.Fatalf("unexpected batch calls: %#v", handler.batchCalls)
+	}
+	if handler.batchCalls[0].filter.From != nil || handler.batchCalls[0].filter.To != nil {
+		t.Fatalf("unexpected time range in batch call: %#v", handler.batchCalls[0])
 	}
 	if _, err := os.Stat(outPath); err != nil {
 		t.Fatalf("expected output file to exist, got: %v", err)
@@ -134,8 +154,11 @@ func TestExecuteByID_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
-	if len(handler.byIDCalls) != 1 || handler.byIDCalls[0] != "run-42" {
+	if len(handler.byIDCalls) != 1 || handler.byIDCalls[0].runID != "run-42" {
 		t.Fatalf("unexpected by-id calls: %#v", handler.byIDCalls)
+	}
+	if handler.byIDCalls[0].filter.From != nil || handler.byIDCalls[0].filter.To != nil {
+		t.Fatalf("unexpected time range in by-id call: %#v", handler.byIDCalls[0])
 	}
 }
 
@@ -180,6 +203,14 @@ func TestExecute_ValidationFailures(t *testing.T) {
 	cases := []Request{
 		{Mode: constant.ExportModeBatch, BatchSize: 0},
 		{Mode: constant.ExportModeByID, RunID: "   "},
+		{
+			Mode:      constant.ExportModeBatch,
+			BatchSize: 1,
+			TimeRange: entity.TimeRangeFilter{From: func() *time.Time {
+				value := time.Now()
+				return &value
+			}()},
+		},
 	}
 
 	for _, req := range cases {
@@ -217,5 +248,43 @@ func TestExecute_CloseWarningIsWritten(t *testing.T) {
 
 	if !strings.Contains(stderr.String(), "close data service") {
 		t.Fatalf("expected close warning, got %q", stderr.String())
+	}
+}
+
+func TestExecute_PropagatesDateRange(t *testing.T) {
+	t.Parallel()
+
+	handler := &fakeCLIHandler{}
+	from := time.Date(2026, time.April, 1, 0, 0, 0, 0, time.Local)
+	to := time.Date(2026, time.April, 2, 12, 30, 0, 0, time.Local)
+
+	executor := NewExecutorWithDeps(Dependencies{
+		LoadDatabaseConfig: func() (config.DatabaseConfig, error) { return config.DatabaseConfig{}, nil },
+		NewDataService:     func(config.DatabaseConfig) (DataService, error) { return &fakeDataService{}, nil },
+		NewParserService:   func() *service.ParserService { return &service.ParserService{} },
+		NewExporterService: func(*service.ParserService, service.PhaseMetricsBatchProvider) api.MeasurementsExporter {
+			return fakeExporter{}
+		},
+		NewCLIHandler: func(api.MeasurementsExporter) CLIHandler { return handler },
+	})
+
+	err := executor.Execute(context.Background(), Request{
+		Mode:      constant.ExportModeBatch,
+		BatchSize: 10,
+		OutPath:   filepath.Join(t.TempDir(), "out.csv"),
+		TimeRange: entity.TimeRangeFilter{From: &from, To: &to},
+	})
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	if len(handler.batchCalls) != 1 {
+		t.Fatalf("expected one batch call, got %#v", handler.batchCalls)
+	}
+	if handler.batchCalls[0].filter.From == nil || handler.batchCalls[0].filter.To == nil {
+		t.Fatalf("expected non-nil propagated time range")
+	}
+	if !handler.batchCalls[0].filter.From.Equal(from) || !handler.batchCalls[0].filter.To.Equal(to) {
+		t.Fatalf("unexpected propagated range: %#v", handler.batchCalls[0])
 	}
 }

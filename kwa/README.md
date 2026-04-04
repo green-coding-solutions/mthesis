@@ -1,6 +1,7 @@
 # KWA CLI (v1)
 
 KWA is a Go CLI for exporting Green Metrics measurements into CSV files.
+Agent docs: [AGENTS.md](AGENTS.md) for deep KWA context and [../AGENTS.md](../AGENTS.md) for repo-level orientation.
 
 ## Current Scope
 
@@ -8,6 +9,8 @@ Version 1 supports:
 - Interactive mode (`kwa`) powered by Bubble Tea + Lipgloss.
 - Non-interactive exports with Cobra subcommands.
 - Two export modes: `batch` and `by-id`.
+- Exports ordered by most recent `created_at`.
+- Optional date-range filtering (`created_at BETWEEN from AND to`).
 
 ## Prerequisites
 
@@ -30,7 +33,7 @@ go build -o kwa ./cmd
 Running `kwa` with no subcommand:
 1. Opens a TUI menu with the bat logo and two options:
    - `batch export`
-   - `byID`
+   - `byID export`
 2. Prompts for mode-specific fields.
 3. Executes the export.
 4. Shows a result screen with the output path and waits for `q` to exit.
@@ -39,10 +42,19 @@ Running `kwa` with no subcommand:
 
 - `batch export`
   - `Rows per batch` (optional, default `100`)
+  - `From timestamp` (optional, `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`)
+  - `To timestamp` (optional, `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`)
   - `fileName` (default `measurements.csv`)
-- `byID`
+- `byID export`
   - `Run ID` (required)
+  - `From timestamp` (optional, `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`)
+  - `To timestamp` (optional, `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`)
   - `fileName` (default `measurements.csv`)
+
+Date input behavior:
+- If only date is provided, time defaults to `00:00:00`.
+- Both `from` and `to` must be provided together, or both left empty.
+- If both are empty, no date filter is applied.
 
 ### Interactive Output Path Rules
 
@@ -69,27 +81,31 @@ Examples:
 ### Batch export
 
 ```bash
-./kwa batch --batch-size 100 --out results/measurements.csv
+./kwa batch --batch-size 100 --from "2026-04-01" --to "2026-04-02 23:59:59" --out results/measurements.csv
 ```
 
 Flags:
 - `--batch-size` (default: `100`)
+- `--from` (optional timestamp: `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`)
+- `--to` (optional timestamp: `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`)
 - `--out` (default: `results/measurements.csv`)
 
 ### Export by run ID
 
 ```bash
-./kwa by-id --run-id <RUN_ID> --out results/measurements.csv
+./kwa by-id --run-id <RUN_ID> --from "2026-04-01" --to "2026-04-02 23:59:59" --out results/measurements.csv
 ```
 
 Alias:
 
 ```bash
-./kwa byID --run-id <RUN_ID> --out results/measurements.csv
+./kwa byID --run-id <RUN_ID> --from "2026-04-01" --to "2026-04-02 23:59:59" --out results/measurements.csv
 ```
 
 Flags:
 - `--run-id` (required)
+- `--from` (optional timestamp: `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`)
+- `--to` (optional timestamp: `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`)
 - `--out` (default: `results/measurements.csv`)
 
 ## Troubleshooting

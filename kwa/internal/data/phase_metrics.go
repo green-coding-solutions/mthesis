@@ -50,24 +50,27 @@ WITH filtered AS (
   SELECT
     run_id,
     phase,
+    created_at,
     %s AS k,
     value
   FROM phase_stats
   WHERE run_id = $1
     AND %s
+    AND ($2::timestamp IS NULL OR created_at BETWEEN $2::timestamp AND $3::timestamp)
 ),
 dedup AS (
-  SELECT run_id, phase, k, MAX(value) AS value
+  SELECT run_id, phase, k, MAX(value) AS value, MAX(created_at) AS created_at
   FROM filtered
   GROUP BY run_id, phase, k
 )
 SELECT
   run_id,
+  MAX(created_at) AS measured_at,
   phase,
   COALESCE(jsonb_object_agg(k, value ORDER BY k), '{}'::jsonb) AS metrics
 FROM dedup
 GROUP BY run_id, phase
-ORDER BY run_id, phase;
+ORDER BY MAX(created_at) DESC, run_id, phase;
 `, metricKeyExpression, phaseFilterClause)
 
 // getPhaseMetricsBatchQuery returns paginated aggregated phase rows across all runs.
@@ -76,23 +79,26 @@ WITH filtered AS (
   SELECT
     run_id,
     phase,
+    created_at,
     %s AS k,
     value
   FROM phase_stats
   WHERE %s
+    AND ($3::timestamp IS NULL OR created_at BETWEEN $3::timestamp AND $4::timestamp)
 ),
 dedup AS (
-  SELECT run_id, phase, k, MAX(value) AS value
+  SELECT run_id, phase, k, MAX(value) AS value, MAX(created_at) AS created_at
   FROM filtered
   GROUP BY run_id, phase, k
 )
 SELECT
   run_id,
+  MAX(created_at) AS measured_at,
   phase,
   COALESCE(jsonb_object_agg(k, value ORDER BY k), '{}'::jsonb) AS metrics
 FROM dedup
 GROUP BY run_id, phase
-ORDER BY run_id, phase
+ORDER BY MAX(created_at) DESC, run_id, phase
 LIMIT $1 OFFSET $2;
 `, metricKeyExpression, phaseFilterClause)
 
@@ -106,12 +112,16 @@ ORDER BY k;
 `, metricKeyExpression, phaseFilterClause)
 
 // GetPhaseMetricsByID fetches all aggregated phase rows for a single run.
-func (s *service) GetPhaseMetricsByID(ctx context.Context, runID string) ([]entity.PhaseMetrics, error) {
+func (s *service) GetPhaseMetricsByID(ctx context.Context, runID string, filter entity.TimeRangeFilter) ([]entity.PhaseMetrics, error) {
 	if strings.TrimSpace(runID) == "" {
 		return nil, fmt.Errorf("runID must not be empty")
 	}
+	if err := filter.Validate(); err != nil {
+		return nil, err
+	}
+	filter = filter.Clone()
 
-	rows, err := s.db.QueryContext(ctx, getPhaseMetricsQueryByID, runID)
+	rows, err := s.db.QueryContext(ctx, getPhaseMetricsQueryByID, runID, filter.From, filter.To)
 	if err != nil {
 		return nil, fmt.Errorf("query phase metrics for run_id %q: %w", runID, err)
 	}
@@ -126,15 +136,19 @@ func (s *service) GetPhaseMetricsByID(ctx context.Context, runID string) ([]enti
 }
 
 // GetPhaseMetricsBatch fetches aggregated phase rows across runs using LIMIT/OFFSET pagination.
-func (s *service) GetPhaseMetricsBatch(ctx context.Context, limit, offset int) ([]entity.PhaseMetrics, error) {
+func (s *service) GetPhaseMetricsBatch(ctx context.Context, limit, offset int, filter entity.TimeRangeFilter) ([]entity.PhaseMetrics, error) {
 	if limit <= 0 {
 		return nil, fmt.Errorf("limit must be greater than zero")
 	}
 	if offset < 0 {
 		return nil, fmt.Errorf("offset must be greater than or equal to zero")
 	}
+	if err := filter.Validate(); err != nil {
+		return nil, err
+	}
+	filter = filter.Clone()
 
-	rows, err := s.db.QueryContext(ctx, getPhaseMetricsBatchQuery, limit, offset)
+	rows, err := s.db.QueryContext(ctx, getPhaseMetricsBatchQuery, limit, offset, filter.From, filter.To)
 	if err != nil {
 		return nil, fmt.Errorf("query phase metrics batch with limit %d offset %d: %w", limit, offset, err)
 	}
@@ -172,17 +186,21 @@ func (s *service) GetMetricKeys(ctx context.Context) ([]string, error) {
 	return keys, nil
 }
 
-// scanPhaseMetricsRows decodes query rows shaped as (run_id, phase, metrics_jsonb).
+// scanPhaseMetricsRows decodes query rows shaped as (run_id, measured_at, phase, metrics_jsonb).
 func scanPhaseMetricsRows(rows *sql.Rows) ([]entity.PhaseMetrics, error) {
 	phaseMetrics := make([]entity.PhaseMetrics, 0)
 	for rows.Next() {
 		var (
 			row        entity.PhaseMetrics
+			measuredAt sql.NullTime
 			metricsRaw []byte
 		)
 
-		if err := rows.Scan(&row.RunID, &row.Phase, &metricsRaw); err != nil {
+		if err := rows.Scan(&row.RunID, &measuredAt, &row.Phase, &metricsRaw); err != nil {
 			return nil, fmt.Errorf("scan phase metrics row: %w", err)
+		}
+		if measuredAt.Valid {
+			row.MeasuredAt = measuredAt.Time
 		}
 
 		if len(metricsRaw) == 0 {
