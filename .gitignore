@@ -11,3 +11,4 @@ inputs/fasta-5000000.txt
 /kwa/build/
 /.agents/
 green-metrics-tool
+/green-metrics-tool/
