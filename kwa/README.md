@@ -1,14 +1,14 @@
-# KWA CLI (v1)
+# KWA CLI (v2)
 
 KWA is a Go CLI for exporting Green Metrics measurements into CSV files.
-Agent docs: [AGENTS.md](AGENTS.md) for deep KWA context and [../AGENTS.md](../AGENTS.md) for repo-level orientation.
 
 ## Current Scope
 
-Version 1 supports:
+Version 2 supports:
 - Interactive mode (`kwa`) powered by Bubble Tea + Lipgloss.
 - Non-interactive exports with Cobra subcommands.
-- Two export modes: `batch` and `by-id`.
+- Export modes: `batch` and `by-id`.
+- Interactive `measure` workflow that runs `scripts/measure.sh` and then auto-exports the captured interval.
 - Exports ordered by most recent `created_at`.
 - Optional date-range filtering (`created_at BETWEEN from AND to`).
 
@@ -31,25 +31,37 @@ go build -o kwa ./cmd
 ## Interactive Mode (`kwa`)
 
 Running `kwa` with no subcommand:
-1. Opens a TUI menu with the bat logo and two options:
-   - `batch export`
-   - `byID export`
+1. Opens a TUI menu with the bat logo and three options:
+   - `Export (Batch mode)`
+   - `Export (by Run ID)`
+   - `Measure`
 2. Prompts for mode-specific fields.
-3. Executes the export.
-4. Shows a result screen with the output path and waits for `q` to exit.
+3. Executes the selected workflow.
+4. Shows a result screen with the output path and waits for `Esc` to exit.
 
 ### Interactive Inputs
 
-- `batch export`
+- `Export (Batch mode)`
   - `Rows per batch` (optional, default `100`)
   - `From timestamp` (optional, `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`)
   - `To timestamp` (optional, `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`)
-  - `fileName` (default `measurements.csv`)
-- `byID export`
+  - `Filename` (default `measurements.csv`)
+- `Export (by Run ID)`
   - `Run ID` (required)
   - `From timestamp` (optional, `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`)
   - `To timestamp` (optional, `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`)
-  - `fileName` (default `measurements.csv`)
+  - `Filename` (default `measurements.csv`)
+- `Measure`
+  - Step 1: benchmark multi-select (8 options)
+  - Step 2: language multi-select (18 options)
+  - Step 3: `Iterations` (required, positive integer) and `Filename`
+  - Execution:
+    - runs `scripts/measure.sh` with `profile=measure`
+    - writes `measure.sh` stdout/stderr to `logs/measure.txt` (instead of printing in the TUI)
+    - fails the workflow in TUI when script exits non-zero or logs GMT fatal markers (for example `Final_exception`)
+    - includes selected languages, benchmarks, and iterations in the running screen
+    - captures start/end timestamps in memory
+    - runs `batch` export for the inclusive interval `[start, end]`
 
 Date input behavior:
 - If only date is provided, time defaults to `00:00:00`.
@@ -58,11 +70,11 @@ Date input behavior:
 
 ### Interactive Output Path Rules
 
-When `fileName` is entered:
+When `Filename` is entered:
 - Empty value defaults to `measurements.csv`
 - Missing `.csv` suffix is auto-appended
 - If value contains `/`, it is treated as a path
-- Otherwise output is written to `results/<fileName>`
+- Otherwise output is written to `results/<Filename>`
 
 Examples:
 - `metrics` -> `results/metrics.csv`
@@ -71,10 +83,23 @@ Examples:
 ### Interactive Keybindings
 
 - `Up` / `Down`: navigate menu and form focus
-- `Enter`: confirm selection / submit on last field
-- `q`: quit
+- `Enter`: confirm selection / continue / submit on last field
+- `Space`: toggle focused benchmark/language in `measure` selection screens
+- `A` or `a`: select all or clear all in `measure` selection screens
+- `Esc`: quit
+  - while a workflow is running, `Esc` opens a confirmation prompt
+  - type `yes` + `Enter` to quit, or select `No`
 - `Ctrl+U`: clear focused form field
-- Mouse wheel / left click are enabled in the menu
+- Mouse input is ignored
+
+### Measure Script Resolution
+
+The measure workflow resolves `scripts/measure.sh` with this precedence:
+1. `KWA_MEASURE_SCRIPT`
+2. `KWA_REPO_ROOT/scripts/measure.sh`
+3. Upward search from current working directory to filesystem root (`scripts/measure.sh`)
+
+`logs/measure.txt` is always written relative to the resolved repository root.
 
 ## Non-Interactive Commands
 

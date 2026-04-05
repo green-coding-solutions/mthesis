@@ -12,6 +12,9 @@ const DefaultCSVFilename = "measurements.csv"
 // DefaultErrorLogPath is the default path for exporter parse warning logs.
 const DefaultErrorLogPath = "logs/error_logs.txt"
 
+// DefaultMeasureLogPath is the default path for captured measure.sh stdout/stderr logs.
+const DefaultMeasureLogPath = "logs/measure.txt"
+
 // ExportMode selects which export operation should run.
 type ExportMode string
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -53,8 +52,6 @@ func New(cfg config.DatabaseConfig) (Service, error) {
 		return nil, fmt.Errorf("ping database: %w", err)
 	}
 
-	log.Printf("database connection established")
-
 	return &service{db: db, database: cfg.Database}, nil
 }
 
@@ -63,6 +60,5 @@ func New(cfg config.DatabaseConfig) (Service, error) {
 // If the connection is successfully closed, it returns nil.
 // If an error occurs while closing the connection, it returns the error.
 func (s *service) Close() error {
-	log.Printf("closing database connection")
 	return s.db.Close()
 }
