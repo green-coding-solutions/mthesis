@@ -9,6 +9,7 @@ import (
 	"time"
 
 	appexport "mthesis/kwa/internal/app/export"
+	appmeasure "mthesis/kwa/internal/app/measure"
 	"mthesis/kwa/internal/constant"
 )
 
@@ -21,7 +22,8 @@ func TestBatchCommandDispatchesRequest(t *testing.T) {
 			got = req
 			return nil
 		},
-		runTUI: func(context.Context, executeRequestFunc, io.Writer, io.Writer) error { return nil },
+		executeMeasure: func(context.Context, appmeasure.Request) error { return nil },
+		runTUI:         func(context.Context, executeRequestFunc, executeMeasureFunc, io.Writer, io.Writer) error { return nil },
 	}
 
 	cmd := newRootCmd(deps)
@@ -60,7 +62,8 @@ func TestBatchCommandUsesDefaults(t *testing.T) {
 			got = req
 			return nil
 		},
-		runTUI: func(context.Context, executeRequestFunc, io.Writer, io.Writer) error { return nil },
+		executeMeasure: func(context.Context, appmeasure.Request) error { return nil },
+		runTUI:         func(context.Context, executeRequestFunc, executeMeasureFunc, io.Writer, io.Writer) error { return nil },
 	}
 
 	cmd := newRootCmd(deps)
@@ -87,8 +90,9 @@ func TestByIDRequiresRunID(t *testing.T) {
 	t.Parallel()
 
 	deps := rootDependencies{
-		execute: func(_ context.Context, _ appexport.Request) error { return nil },
-		runTUI:  func(context.Context, executeRequestFunc, io.Writer, io.Writer) error { return nil },
+		execute:        func(_ context.Context, _ appexport.Request) error { return nil },
+		executeMeasure: func(context.Context, appmeasure.Request) error { return nil },
+		runTUI:         func(context.Context, executeRequestFunc, executeMeasureFunc, io.Writer, io.Writer) error { return nil },
 	}
 
 	cmd := newRootCmd(deps)
@@ -114,7 +118,8 @@ func TestByIDAliasDispatchesRequest(t *testing.T) {
 			got = req
 			return nil
 		},
-		runTUI: func(context.Context, executeRequestFunc, io.Writer, io.Writer) error { return nil },
+		executeMeasure: func(context.Context, appmeasure.Request) error { return nil },
+		runTUI:         func(context.Context, executeRequestFunc, executeMeasureFunc, io.Writer, io.Writer) error { return nil },
 	}
 
 	cmd := newRootCmd(deps)
@@ -146,8 +151,9 @@ func TestRootLaunchesTUI(t *testing.T) {
 	var launched bool
 
 	deps := rootDependencies{
-		execute: func(_ context.Context, _ appexport.Request) error { return nil },
-		runTUI: func(_ context.Context, _ executeRequestFunc, _ io.Writer, _ io.Writer) error {
+		execute:        func(_ context.Context, _ appexport.Request) error { return nil },
+		executeMeasure: func(context.Context, appmeasure.Request) error { return nil },
+		runTUI: func(_ context.Context, _ executeRequestFunc, _ executeMeasureFunc, _ io.Writer, _ io.Writer) error {
 			launched = true
 			return nil
 		},
@@ -176,7 +182,8 @@ func TestBatchCommandParsesDateRange(t *testing.T) {
 			got = req
 			return nil
 		},
-		runTUI: func(context.Context, executeRequestFunc, io.Writer, io.Writer) error { return nil },
+		executeMeasure: func(context.Context, appmeasure.Request) error { return nil },
+		runTUI:         func(context.Context, executeRequestFunc, executeMeasureFunc, io.Writer, io.Writer) error { return nil },
 	}
 
 	cmd := newRootCmd(deps)
@@ -203,8 +210,9 @@ func TestByIDCommandRejectsPartialDateRange(t *testing.T) {
 	t.Parallel()
 
 	deps := rootDependencies{
-		execute: func(_ context.Context, _ appexport.Request) error { return nil },
-		runTUI:  func(context.Context, executeRequestFunc, io.Writer, io.Writer) error { return nil },
+		execute:        func(_ context.Context, _ appexport.Request) error { return nil },
+		executeMeasure: func(context.Context, appmeasure.Request) error { return nil },
+		runTUI:         func(context.Context, executeRequestFunc, executeMeasureFunc, io.Writer, io.Writer) error { return nil },
 	}
 
 	cmd := newRootCmd(deps)
@@ -230,7 +238,8 @@ func TestByIDCommandPassesDateRange(t *testing.T) {
 			got = req
 			return nil
 		},
-		runTUI: func(context.Context, executeRequestFunc, io.Writer, io.Writer) error { return nil },
+		executeMeasure: func(context.Context, appmeasure.Request) error { return nil },
+		runTUI:         func(context.Context, executeRequestFunc, executeMeasureFunc, io.Writer, io.Writer) error { return nil },
 	}
 
 	cmd := newRootCmd(deps)

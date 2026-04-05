@@ -7,6 +7,7 @@ import (
 	"os"
 
 	appexport "mthesis/kwa/internal/app/export"
+	appmeasure "mthesis/kwa/internal/app/measure"
 	"mthesis/kwa/internal/constant"
 
 	"github.com/spf13/cobra"
@@ -14,18 +15,23 @@ import (
 
 type interactiveRunner func(
 	ctx context.Context,
-	execute executeRequestFunc,
+	executeExport executeRequestFunc,
+	executeMeasure executeMeasureFunc,
 	stdout io.Writer,
 	stderr io.Writer,
 ) error
 
 type rootDependencies struct {
-	execute executeRequestFunc
-	runTUI  interactiveRunner
+	execute        executeRequestFunc
+	executeMeasure executeMeasureFunc
+	runTUI         interactiveRunner
 }
 
 // executeRequestFunc bridges CLI/TUI input handling with application execution.
 type executeRequestFunc func(context.Context, appexport.Request) error
+
+// executeMeasureFunc bridges CLI/TUI measure input handling with the measure application executor.
+type executeMeasureFunc func(context.Context, appmeasure.Request) error
 
 // Execute runs the Cobra root command and exits with code 1 on command errors.
 func Execute() {
@@ -38,10 +44,12 @@ func Execute() {
 
 // defaultDependencies wires the production executor and interactive runner.
 func defaultDependencies() rootDependencies {
-	executor := appexport.NewExecutor()
+	exportExecutor := appexport.NewExecutor()
+	measureExecutor := appmeasure.NewExecutor(exportExecutor.Execute)
 	return rootDependencies{
-		execute: executor.Execute,
-		runTUI:  runInteractive,
+		execute:        exportExecutor.Execute,
+		executeMeasure: measureExecutor.Execute,
+		runTUI:         runInteractive,
 	}
 }
 
@@ -50,16 +58,19 @@ func newRootCmd(deps rootDependencies) *cobra.Command {
 	if deps.execute == nil {
 		deps.execute = appexport.NewExecutor().Execute
 	}
+	if deps.executeMeasure == nil {
+		deps.executeMeasure = appmeasure.NewExecutor(deps.execute).Execute
+	}
 	if deps.runTUI == nil {
 		deps.runTUI = runInteractive
 	}
 
 	rootCmd := &cobra.Command{
 		Use:          "kwa",
-		Short:        "KWA CLI for exporting green metrics",
+		Short:        "KWA CLI for measuring and exporting green metrics",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return deps.runTUI(cmd.Context(), deps.execute, cmd.OutOrStdout(), cmd.ErrOrStderr())
+			return deps.runTUI(cmd.Context(), deps.execute, deps.executeMeasure, cmd.OutOrStdout(), cmd.ErrOrStderr())
 		},
 	}
 

@@ -23,6 +23,8 @@ type styleSet struct {
 	inputText        lipgloss.Style
 	inputPlaceholder lipgloss.Style
 	inputCursor      lipgloss.Style
+	button           lipgloss.Style
+	buttonFocused    lipgloss.Style
 }
 
 var tuiStyles = newStyleSet()
@@ -102,5 +104,18 @@ func newStyleSet() styleSet {
 			Foreground(lipgloss.Color(placeholder)),
 		inputCursor: lipgloss.NewStyle().
 			Foreground(lipgloss.Color(accent)),
+		button: lipgloss.NewStyle().
+			BorderStyle(lipgloss.NormalBorder()).
+			BorderForeground(lipgloss.Color(borderMuted)).
+			Foreground(lipgloss.Color(fgMuted)).
+			Bold(true).
+			Padding(0, 2),
+		buttonFocused: lipgloss.NewStyle().
+			BorderStyle(lipgloss.NormalBorder()).
+			BorderForeground(lipgloss.Color(accent)).
+			Background(lipgloss.Color(accent)).
+			Foreground(lipgloss.Color(selectedFG)).
+			Bold(true).
+			Padding(0, 2),
 	}
 }

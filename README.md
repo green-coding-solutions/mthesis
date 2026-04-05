@@ -1,6 +1,8 @@
 # Towards a More Accurate Understanding of Programming Language Energy Efficiency
 
-Agent docs: [AGENTS.md](AGENTS.md) for repo overview and [kwa/AGENTS.md](kwa/AGENTS.md) for deep KWA architecture/workflows.
+## Documentation
+
+- KWA v2 CLI docs: [`kwa/README.md`](kwa/README.md)
 
 ## Linux Setup (Ubuntu 22.04/24.04)
 
