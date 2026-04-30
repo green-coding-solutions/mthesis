@@ -88,6 +88,8 @@ ensure_base_tools() {
   apt_install_missing ca-certificates curl git make gcc gnupg lsb-release software-properties-common
 }
 
+# ensure_python312 installs and validates Python 3.12 plus venv/dev support needed by GMT.
+# It exits on unsupported Python binaries or failed package installation.
 ensure_python312() {
   local py312_bin=""
 
@@ -103,6 +105,8 @@ ensure_python312() {
     fi
     py312_bin="$(command -v python3.12 || true)"
   fi
+
+  apt_install_missing python3.12-venv python3.12-dev
 
   [ -n "$py312_bin" ] || die "Python 3.12 installation failed."
 
@@ -283,6 +287,8 @@ read_env_default() {
   printf '%s' "$value"
 }
 
+# build_provider_skip_flags maps a provider-skip code into GMT install flags.
+# It updates ATTEMPT_FLAGS and always succeeds, including when no providers are skipped.
 build_provider_skip_flags() {
   local code="$1"
   ATTEMPT_FLAGS=()
