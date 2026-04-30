@@ -8,11 +8,10 @@ services:
     command: sleep infinity
 
 flow:
-  # TODO: Enable when validated on x86.
-  # - name: CSharp-N-Body
-  #   container: csharp-container
-  #   commands:
-  #     - type: console
-  #       command: bash -c "dotnet new console -n app --output /tmp/out --force && cp /tmp/repo/benchmarks/csharp/n-body/main.cs /tmp/out/Program.cs && cd /tmp/out && dotnet build -c Release"
-  #     - type: console
-  #       command: dotnet /tmp/out/bin/Release/net9.0/app.dll 50000000
+  - name: CSharp-N-Body
+    container: csharp-container
+    commands:
+      - type: console
+        command: bash -c "dotnet new console -n app --output /tmp/out --force && cp /tmp/repo/benchmarks/csharp/n-body/main.cs /tmp/out/Program.cs && cd /tmp/out && dotnet build -c Release"
+      - type: console
+        command: dotnet /tmp/out/bin/Release/net9.0/app.dll 50000000

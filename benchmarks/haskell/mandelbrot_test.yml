@@ -10,11 +10,10 @@ services:
     command: sleep infinity
 
 flow:
-  #TODO: Add LLVM x86
-  # - name: Haskell-Mandelbrot
-  #   container: haskell-container
-  #   commands:
-  #     - type: console
-  #       command: sh -c "mkdir -p /tmp/haskell-mandelbrot && ghc -fllvm -O2 -XBangPatterns -threaded -rtsopts -XMagicHash -XUnboxedTuples /tmp/repo/benchmarks/haskell/mandelbrot/main.hs -outputdir /tmp/haskell-mandelbrot -odir /tmp/haskell-mandelbrot -hidir /tmp/haskell-mandelbrot -o /tmp/haskell-mandelbrot/main"
-  #     - type: console
-  #       command: /tmp/haskell-mandelbrot/main +RTS -N4 -RTS 160
+  - name: Haskell-Mandelbrot
+    container: haskell-container
+    commands:
+      - type: console
+        command: sh -c "mkdir -p /tmp/haskell-mandelbrot && ghc -fllvm -O2 -XBangPatterns -threaded -rtsopts -XMagicHash -XUnboxedTuples /tmp/repo/benchmarks/haskell/mandelbrot/main.hs -outputdir /tmp/haskell-mandelbrot -odir /tmp/haskell-mandelbrot -hidir /tmp/haskell-mandelbrot -o /tmp/haskell-mandelbrot/main"
+      - type: console
+        command: /tmp/haskell-mandelbrot/main +RTS -N4 -RTS 160
