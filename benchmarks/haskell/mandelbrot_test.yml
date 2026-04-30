@@ -7,7 +7,7 @@ services:
     image: haskell:9.10.1
     setup-commands:
       - shell: bash
-        command: apt-get update && apt-get install -y --no-install-recommends llvm-15 clang-15 libpcre2-dev && ln -sf /usr/bin/opt-15 /usr/local/bin/opt && ln -sf /usr/bin/llc-15 /usr/local/bin/llc && rm -rf /var/lib/apt/lists/*
+        command: apt-get update && for version in 15 14 13; do if apt-cache show "llvm-${version}" "clang-${version}" >/dev/null 2>&1; then apt-get install -y --no-install-recommends "llvm-${version}" "clang-${version}" libpcre2-dev && ln -sf "/usr/bin/opt-${version}" /usr/local/bin/opt && ln -sf "/usr/bin/llc-${version}" /usr/local/bin/llc && break; fi; done && test -x /usr/local/bin/opt && test -x /usr/local/bin/llc && rm -rf /var/lib/apt/lists/*
     command: sleep infinity
 
 flow:
