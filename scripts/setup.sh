@@ -290,6 +290,8 @@ build_provider_skip_flags() {
   [[ "$code" == *I* ]] && ATTEMPT_FLAGS+=("-I")
   [[ "$code" == *S* ]] && ATTEMPT_FLAGS+=("-S")
   [[ "$code" == *R* ]] && ATTEMPT_FLAGS+=("-R")
+
+  return 0
 }
 
 run_gmt_install_best_effort() {
