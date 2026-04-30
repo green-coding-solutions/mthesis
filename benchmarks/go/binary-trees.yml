@@ -12,8 +12,7 @@ flow:
     container: go-container
     commands:
       - type: console
-        command: sh -c "go build -o /tmp/go-binary-trees /tmp/repo/benchmarks/go/binary-trees/main.go"
+        command: go build -o /tmp/go-binary-trees /tmp/repo/benchmarks/go/binary-trees/main.go
       - type: console
         command: /tmp/go-binary-trees 21
-
 

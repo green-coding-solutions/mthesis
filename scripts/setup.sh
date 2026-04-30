@@ -313,7 +313,9 @@ run_gmt_install_best_effort() {
   [ -n "$py312" ] || die "python3.12 not found before GMT install."
 
   local pyshim
-  pyshim="$(mktemp -d)"
+  pyshim="${GMT_DIR}/.setup-python-shim"
+  mkdir -p "$pyshim"
+  rm -f "${pyshim}/python3"
   ln -s "$py312" "${pyshim}/python3"
 
   local -a base_args=(
@@ -358,8 +360,6 @@ run_gmt_install_best_effort() {
 
     INSTALL_WARNINGS+=("GMT install attempt $((attempt + 1)) failed (flags: ${ATTEMPT_FLAGS[*]:-none}).")
   done
-
-  rm -rf "$pyshim"
 
   if [ "$install_succeeded" = false ]; then
     die "GMT install failed after all best-effort attempts."
