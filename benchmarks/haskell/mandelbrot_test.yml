@@ -16,6 +16,6 @@ flow:
     commands:
       - type: console
         shell: sh
-        command: mkdir -p /tmp/haskell-mandelbrot && ghc -fllvm -O2 -XBangPatterns -threaded -rtsopts -XMagicHash -XUnboxedTuples /tmp/repo/benchmarks/haskell/mandelbrot/main.hs -outputdir /tmp/haskell-mandelbrot -odir /tmp/haskell-mandelbrot -hidir /tmp/haskell-mandelbrot -o /tmp/haskell-mandelbrot/main
+        command: mkdir -p /tmp/haskell-mandelbrot && ghc -O2 -XBangPatterns -threaded -rtsopts -XMagicHash -XUnboxedTuples /tmp/repo/benchmarks/haskell/mandelbrot/main.hs -outputdir /tmp/haskell-mandelbrot -odir /tmp/haskell-mandelbrot -hidir /tmp/haskell-mandelbrot -o /tmp/haskell-mandelbrot/main
       - type: console
         command: /tmp/haskell-mandelbrot/main +RTS -N4 -RTS 160
