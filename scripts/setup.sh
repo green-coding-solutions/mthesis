@@ -330,6 +330,7 @@ run_gmt_install_best_effort() {
   local -a attempt_codes=("" "I" "S" "R" "IS" "IR" "SR" "ISR")
   local attempt
   local chosen_code=""
+  local install_succeeded=false
 
   for attempt in "${!attempt_codes[@]}"; do
     local code="${attempt_codes[$attempt]}"
@@ -351,6 +352,7 @@ run_gmt_install_best_effort() {
 
     if [ "$rc" -eq 0 ]; then
       chosen_code="$code"
+      install_succeeded=true
       break
     fi
 
@@ -359,11 +361,11 @@ run_gmt_install_best_effort() {
 
   rm -rf "$pyshim"
 
-  if [ -z "$chosen_code" ] && [ "${#attempt_codes[@]}" -gt 0 ]; then
+  if [ "$install_succeeded" = false ]; then
     die "GMT install failed after all best-effort attempts."
   fi
 
-  if [ -n "$chosen_code" ]; then
+  if [ "$install_succeeded" = true ]; then
     local -a skipped=()
     [[ "$chosen_code" == *I* ]] && skipped+=("IPMI tools")
     [[ "$chosen_code" == *S* ]] && skipped+=("lm-sensors")
