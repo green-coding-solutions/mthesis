@@ -12,6 +12,6 @@ flow:
     container: go-container
     commands:
       - type: console
-        command: sh -c "go build -o /tmp/go-fasta /tmp/repo/benchmarks/go/fasta/main.go"
+        command: go build -o /tmp/go-fasta /tmp/repo/benchmarks/go/fasta/main.go
       - type: console
         command: /tmp/go-fasta 100

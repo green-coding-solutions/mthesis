@@ -12,6 +12,7 @@ flow:
     container: python-container
     commands:
       - type: console
-        command: sh -c "python3 -OO /tmp/repo/benchmarks/python/regex-redux/main.py 0 < /tmp/repo/inputs/fasta-100.txt"
+        shell: sh
+        command: python3 -OO /tmp/repo/benchmarks/python/regex-redux/main.py 0 < /tmp/repo/inputs/fasta-100.txt
 
 

@@ -6,7 +6,8 @@ services:
   haskell-container:
     image: haskell:9.10.1
     setup-commands:
-      - command: bash -c "cabal update && cabal install --lib parallel ghc-compact"
+      - shell: bash
+        command: cabal update && cabal install --lib parallel ghc-compact
     command: sleep infinity
 
 flow:
@@ -14,6 +15,7 @@ flow:
     container: haskell-container
     commands:
       - type: console
-        command: sh -c "mkdir -p /tmp/haskell-binary-trees && ghc -O2 -XBangPatterns -threaded -rtsopts -XMagicHash /tmp/repo/benchmarks/haskell/binary-trees/main.hs -outputdir /tmp/haskell-binary-trees -odir /tmp/haskell-binary-trees -hidir /tmp/haskell-binary-trees -o /tmp/haskell-binary-trees/main"
+        shell: sh
+        command: mkdir -p /tmp/haskell-binary-trees && ghc -O2 -XBangPatterns -threaded -rtsopts -XMagicHash /tmp/repo/benchmarks/haskell/binary-trees/main.hs -outputdir /tmp/haskell-binary-trees -odir /tmp/haskell-binary-trees -hidir /tmp/haskell-binary-trees -o /tmp/haskell-binary-trees/main
       - type: console
         command: /tmp/haskell-binary-trees/main +RTS -N4 -K128M -H -RTS 6

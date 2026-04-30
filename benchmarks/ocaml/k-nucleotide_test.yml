@@ -6,7 +6,8 @@ services:
   ocaml-container:
     image: ocaml/opam:ubuntu-24.04-ocaml-5.4
     setup-commands:
-      - command: sh -lc "opam update && opam install -y ocamlfind re"
+      - shell: sh
+        command: opam update && opam install -y ocamlfind re
     command: sleep infinity
 
 flow:
@@ -16,6 +17,7 @@ flow:
       - type: console
         command: sh /tmp/repo/benchmarks/ocaml/k-nucleotide/build_in_tmp.sh
       - type: console
-        command: sh -c "/tmp/ocaml-k-nucleotide < /tmp/repo/inputs/fasta-100.txt"
+        shell: sh
+        command: /tmp/ocaml-k-nucleotide < /tmp/repo/inputs/fasta-100.txt
 
 

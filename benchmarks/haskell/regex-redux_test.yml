@@ -6,8 +6,10 @@ services:
   haskell-container:
     image: haskell:9.10.1
     setup-commands:
-      - command: bash -c "apt-get update && apt-get install -y --no-install-recommends libpcre2-dev && rm -rf /var/lib/apt/lists/*"
-      - command: bash -c "cabal update && cabal install --lib vector"
+      - shell: bash
+        command: apt-get update && apt-get install -y --no-install-recommends libpcre2-dev && rm -rf /var/lib/apt/lists/*
+      - shell: bash
+        command: cabal update && cabal install --lib vector
     command: sleep infinity
 
 flow:
@@ -15,7 +17,9 @@ flow:
     container: haskell-container
     commands:
       - type: console
-        command: sh -c "mkdir -p /tmp/haskell-regex-redux && ghc -O2 -XBangPatterns -threaded -rtsopts -XForeignFunctionInterface -XCApiFFI -optc \"-DPCRE2_CODE_UNIT_WIDTH=8\" /tmp/repo/benchmarks/haskell/regex-redux/main.hs -outputdir /tmp/haskell-regex-redux -odir /tmp/haskell-regex-redux -hidir /tmp/haskell-regex-redux -o /tmp/haskell-regex-redux/main -lpcre2-8"
+        shell: sh
+        command: mkdir -p /tmp/haskell-regex-redux && ghc -O2 -XBangPatterns -threaded -rtsopts -XForeignFunctionInterface -XCApiFFI -optc "-DPCRE2_CODE_UNIT_WIDTH=8" /tmp/repo/benchmarks/haskell/regex-redux/main.hs -outputdir /tmp/haskell-regex-redux -odir /tmp/haskell-regex-redux -hidir /tmp/haskell-regex-redux -o /tmp/haskell-regex-redux/main -lpcre2-8
       - type: console
-        command: sh -c "/tmp/haskell-regex-redux/main +RTS -N4 -H250M -RTS 0 < /tmp/repo/inputs/fasta-100.txt"
+        shell: sh
+        command: /tmp/haskell-regex-redux/main +RTS -N4 -H250M -RTS 0 < /tmp/repo/inputs/fasta-100.txt
 

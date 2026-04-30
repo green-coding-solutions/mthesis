@@ -6,7 +6,8 @@ services:
   php-container:
     image: php:8.4-cli
     setup-commands:
-      - command: sh -lc "docker-php-ext-install -j\"$(nproc)\" shmop pcntl && docker-php-ext-enable shmop pcntl"
+      - shell: sh
+        command: docker-php-ext-install -j"$(nproc)" shmop pcntl && docker-php-ext-enable shmop pcntl
     command: sleep infinity
 
 flow:

@@ -12,7 +12,7 @@ flow:
     container: go-container
     commands:
       - type: console
-        command: sh -c "go build -o /tmp/go-n-body /tmp/repo/benchmarks/go/n-body/main.go"
+        command: go build -o /tmp/go-n-body /tmp/repo/benchmarks/go/n-body/main.go
       - type: console
         command: /tmp/go-n-body 500
 

@@ -6,7 +6,8 @@ services:
   haskell-container:
     image: haskell:9.10.1
     setup-commands:
-      - command: bash -c "cabal update && cabal install --lib parallel hashable hashtables containers bytestring"
+      - shell: bash
+        command: cabal update && cabal install --lib parallel hashable hashtables containers bytestring
     command: sleep infinity
 
 flow:
@@ -14,6 +15,8 @@ flow:
     container: haskell-container
     commands:
       - type: console
-        command: sh -c "mkdir -p /tmp/haskell-k-nucleotide && ghc -O2 -XBangPatterns -threaded -rtsopts -XMagicHash /tmp/repo/benchmarks/haskell/k-nucleotide/main.hs -outputdir /tmp/haskell-k-nucleotide -odir /tmp/haskell-k-nucleotide -hidir /tmp/haskell-k-nucleotide -o /tmp/haskell-k-nucleotide/main"
+        shell: sh
+        command: mkdir -p /tmp/haskell-k-nucleotide && ghc -O2 -XBangPatterns -threaded -rtsopts -XMagicHash /tmp/repo/benchmarks/haskell/k-nucleotide/main.hs -outputdir /tmp/haskell-k-nucleotide -odir /tmp/haskell-k-nucleotide -hidir /tmp/haskell-k-nucleotide -o /tmp/haskell-k-nucleotide/main
       - type: console
-        command: sh -c "/tmp/haskell-k-nucleotide/main +RTS -N4 -K2048M -RTS 0 < /tmp/repo/inputs/fasta-100.txt"
+        shell: sh
+        command: /tmp/haskell-k-nucleotide/main +RTS -N4 -K2048M -RTS 0 < /tmp/repo/inputs/fasta-100.txt

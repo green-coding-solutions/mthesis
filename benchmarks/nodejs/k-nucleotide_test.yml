@@ -12,6 +12,7 @@ flow:
     container: node-container
     commands:
       - type: console
-        command: sh -c "node /tmp/repo/benchmarks/nodejs/k-nucleotide/main.js < /tmp/repo/inputs/fasta-100.txt"
+        shell: sh
+        command: node /tmp/repo/benchmarks/nodejs/k-nucleotide/main.js < /tmp/repo/inputs/fasta-100.txt
 
 

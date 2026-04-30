@@ -6,7 +6,8 @@ services:
   haskell-container:
     image: haskell:9.10.1
     setup-commands:
-      - command: bash -c "apt-get update && apt-get install -y --no-install-recommends libpcre2-dev && rm -rf /var/lib/apt/lists/*"
+      - shell: bash
+        command: apt-get update && apt-get install -y --no-install-recommends libpcre2-dev && rm -rf /var/lib/apt/lists/*
     command: sleep infinity
 
 flow:
@@ -14,6 +15,7 @@ flow:
     container: haskell-container
     commands:
       - type: console
-        command: sh -c "mkdir -p /tmp/haskell-mandelbrot && ghc -fllvm -O2 -XBangPatterns -threaded -rtsopts -XMagicHash -XUnboxedTuples /tmp/repo/benchmarks/haskell/mandelbrot/main.hs -outputdir /tmp/haskell-mandelbrot -odir /tmp/haskell-mandelbrot -hidir /tmp/haskell-mandelbrot -o /tmp/haskell-mandelbrot/main"
+        shell: sh
+        command: mkdir -p /tmp/haskell-mandelbrot && ghc -fllvm -O2 -XBangPatterns -threaded -rtsopts -XMagicHash -XUnboxedTuples /tmp/repo/benchmarks/haskell/mandelbrot/main.hs -outputdir /tmp/haskell-mandelbrot -odir /tmp/haskell-mandelbrot -hidir /tmp/haskell-mandelbrot -o /tmp/haskell-mandelbrot/main
       - type: console
         command: /tmp/haskell-mandelbrot/main +RTS -N4 -RTS 160

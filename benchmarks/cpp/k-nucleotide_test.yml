@@ -6,7 +6,8 @@ services:
   cpp-container:
     image: gcc:15.2.0
     setup-commands:
-      - command: bash -c "apt-get update && apt-get install -y --fix-missing libboost-dev && rm -rf /var/lib/apt/lists/*"
+      - shell: bash
+        command: apt-get update && apt-get install -y --fix-missing libboost-dev && rm -rf /var/lib/apt/lists/*
     command: sleep infinity
 
 flow:
@@ -16,6 +17,7 @@ flow:
       - type: console
         command: g++ -pipe -O3 -fomit-frame-pointer -std=c++17 -march=native /tmp/repo/benchmarks/cpp/k-nucleotide/main.cpp -o /tmp/main
       - type: console
-        command: sh -c "/tmp/main < /tmp/repo/inputs/fasta-100.txt"
+        shell: sh
+        command: /tmp/main < /tmp/repo/inputs/fasta-100.txt
 
 

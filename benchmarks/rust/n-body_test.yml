@@ -6,7 +6,8 @@ services:
   rust-container:
     image: rust:1.93-alpine
     setup-commands:
-      - command: sh -lc "apk add --no-cache rust cargo"
+      - shell: sh
+        command: apk add --no-cache rust cargo
     command: sleep infinity
 
 flow:
