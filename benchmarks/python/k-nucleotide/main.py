@@ -7,7 +7,7 @@ from os import cpu_count
 from sys import stdin
 from collections import defaultdict
 from itertools import starmap, chain
-from multiprocessing import Pool
+from multiprocessing import get_context
 
 lean_buffer = {}
 
@@ -137,6 +137,9 @@ def display(results, display_list, sort=False, relative=False, end='\n'):
             print("{1}\t{0}".format(k_nucleotide, frequency))
     print(end=end)
 
+# main reads the FASTA sequence from stdin, computes the benchmark's frequency
+# reports, prints them to stdout, and uses a fork-based worker pool for large
+# inputs so workers inherit the prepared shared lookup buffer.
 def main():
     translation = bytes.maketrans(b'GTCAgtca',
         b'\x00\x01\x02\x03\x00\x01\x02\x03')
@@ -173,7 +176,7 @@ def main():
         results = list(chain(*starmap(count_frequencies, count_jobs)))
     else:
         lean_jobs = list(starmap(lean_args, count_jobs))
-        with Pool() as pool:
+        with get_context('fork').Pool() as pool:
             async_results = pool.starmap_async(
                 lean_call(count_frequencies), lean_jobs)
             results = list(chain(*async_results.get()))
