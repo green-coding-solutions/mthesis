@@ -12,6 +12,8 @@ flow:
     container: csharp-container
     commands:
       - type: console
-        command: bash -c "dotnet new console -n app --output /tmp/out --force && cp /tmp/repo/benchmarks/csharp/regex-redux/main.cs /tmp/out/Program.cs && cd /tmp/out && dotnet build -c Release -p:AllowUnsafeBlocks=true"
+        shell: bash
+        command: dotnet new console -n app --output /tmp/out --force && cp /tmp/repo/benchmarks/csharp/regex-redux/main.cs /tmp/out/Program.cs && cd /tmp/out && dotnet build -c Release -p:AllowUnsafeBlocks=true
       - type: console
-        command: sh -c "dotnet /tmp/out/bin/Release/net9.0/app.dll 0 < /tmp/repo/inputs/fasta-5000000.txt"
+        shell: sh
+        command: dotnet /tmp/out/bin/Release/net9.0/app.dll 0 < /tmp/repo/inputs/fasta-5000000.txt

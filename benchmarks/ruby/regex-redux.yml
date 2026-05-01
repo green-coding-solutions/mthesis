@@ -14,5 +14,6 @@ flow:
       - type: console
         command: sh /tmp/repo/benchmarks/ruby/regex-redux/build_in_tmp.sh
       - type: console
-        command: sh -c "/tmp/ruby-regex-redux < /tmp/repo/inputs/fasta-5000000.txt"
+        shell: sh
+        command: /tmp/ruby-regex-redux < /tmp/repo/inputs/fasta-5000000.txt
 

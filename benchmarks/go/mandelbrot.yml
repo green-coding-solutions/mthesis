@@ -12,6 +12,6 @@ flow:
     container: go-container
     commands:
       - type: console
-        command: sh -c "go build -o /tmp/go-mandelbrot /tmp/repo/benchmarks/go/mandelbrot/main.go"
+        command: go build -o /tmp/go-mandelbrot /tmp/repo/benchmarks/go/mandelbrot/main.go
       - type: console
         command: /tmp/go-mandelbrot 16000

@@ -14,6 +14,7 @@ flow:
       - type: console
         command: dart compile exe /tmp/repo/benchmarks/dart/k-nucleotide/main.dart -o /tmp/main
       - type: console
-        command: sh -c "/tmp/main < /tmp/repo/inputs/fasta-2500000.txt"
+        shell: sh
+        command: /tmp/main < /tmp/repo/inputs/fasta-2500000.txt
 
 

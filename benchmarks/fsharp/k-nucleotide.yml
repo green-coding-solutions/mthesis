@@ -16,6 +16,7 @@ flow:
       - type: console
         command: sh /tmp/repo/benchmarks/fsharp/k-nucleotide/build_in_tmp.sh
       - type: console
-        command: sh -c "/tmp/fsharp-k-nucleotide < /tmp/repo/inputs/fasta-2500000.txt"
+        shell: sh
+        command: /tmp/fsharp-k-nucleotide < /tmp/repo/inputs/fasta-2500000.txt
 
 

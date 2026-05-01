@@ -29,8 +29,8 @@
 - [fasta](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fasta-csharpaot-5.html)
 - [k-nucleotide](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-csharpaot-6.html)
 - [mandelbrot](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-csharpaot-9.html)
-- [n-body](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-csharpaot-3.html) ❌ -> Test on x86
-- [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-csharpaot-5.html) ❌ -> Test on x86
+- [n-body](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-csharpaot-3.html) -> Works on x86
+- [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-csharpaot-5.html) -> Works on x86
 - [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-csharpaot-2.html)
 
 ## Dart ✅
@@ -62,7 +62,7 @@
 - [fasta](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fasta-fsharpcore-3.html)
 - [k-nucleotide](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-fsharpcore-6.html)
 - [mandelbrot](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-fsharpcore-6.html)
-- [n-body](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-fsharpcore-6.html) ❌ -> Test on x86
+- [n-body](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-fsharpcore-6.html) -> Works on x86
 - [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-fsharpcore-6.html)
 - [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-fsharpcore-6.html)
 
@@ -83,7 +83,7 @@
 - [fannkuch-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fannkuchredux-ghc-3.html)
 - [fasta](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fasta-ghc-6.html)
 - [k-nucleotide](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-ghc-2.html)
-- [mandelbrot](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-ghc-3.html) ❌ -> Test on x86
+- [mandelbrot](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-ghc-3.html) -> Works on x86
 - [n-body](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-ghc-2.html)
 - [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-ghc-3.html)
 - [spectral-norm](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/spectralnorm-ghc-4.html)
@@ -179,7 +179,7 @@
 ## Rust
 
 - [binary-trees](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/binarytrees-rust-5.html)
-- [fannkuch-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fannkuchredux-rust-6.html) ❌ -> Test on x86
+- [fannkuch-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fannkuchredux-rust-6.html) -> Works on x86
 - [fasta](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fasta-rust-9.html)
 - [k-nucleotide](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-rust-7.html)
 - [mandelbrot](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-rust-4.html)

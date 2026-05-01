@@ -6,7 +6,8 @@ services:
   php-container:
     image: php:8.4-cli
     setup-commands:
-      - command: sh -lc "docker-php-ext-install -j\"$(nproc)\" shmop pcntl sysvmsg && docker-php-ext-enable shmop pcntl sysvmsg"
+      - shell: sh
+        command: docker-php-ext-install -j"$(nproc)" shmop pcntl sysvmsg && docker-php-ext-enable shmop pcntl sysvmsg
     command: sleep infinity
 
 flow:
@@ -16,6 +17,7 @@ flow:
       - type: console
         command: sh /tmp/repo/benchmarks/php/k-nucleotide/build_in_tmp.sh
       - type: console
-        command: sh -c "/tmp/php-k-nucleotide < /tmp/repo/inputs/fasta-2500000.txt"
+        shell: sh
+        command: /tmp/php-k-nucleotide < /tmp/repo/inputs/fasta-2500000.txt
 
 

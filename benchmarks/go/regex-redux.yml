@@ -12,8 +12,9 @@ flow:
     container: go-container
     commands:
       - type: console
-        command: sh -c "go build -o /tmp/go-regex-redux /tmp/repo/benchmarks/go/regex-redux/main.go"
+        command: go build -o /tmp/go-regex-redux /tmp/repo/benchmarks/go/regex-redux/main.go
       - type: console
-        command: sh -c "/tmp/go-regex-redux < /tmp/repo/inputs/fasta-5000000.txt"
+        shell: sh
+        command: /tmp/go-regex-redux < /tmp/repo/inputs/fasta-5000000.txt
 
 

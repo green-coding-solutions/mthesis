@@ -12,6 +12,7 @@ flow:
     container: csharp-container
     commands:
       - type: console
-        command: bash -c "dotnet new console -n app --output /tmp/out --force && cp /tmp/repo/benchmarks/csharp/fannkuch-redux/main.cs /tmp/out/Program.cs && cd /tmp/out && dotnet build -c Release -p:AllowUnsafeBlocks=true"
+        shell: bash
+        command: dotnet new console -n app --output /tmp/out --force && cp /tmp/repo/benchmarks/csharp/fannkuch-redux/main.cs /tmp/out/Program.cs && cd /tmp/out && dotnet build -c Release -p:AllowUnsafeBlocks=true
       - type: console
         command: dotnet /tmp/out/bin/Release/net9.0/app.dll 12

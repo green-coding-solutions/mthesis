@@ -6,7 +6,8 @@ services:
   haskell-container:
     image: haskell:9.10.1
     setup-commands:
-      - command: bash -c "apt-get update && apt-get install -y --no-install-recommends libpcre2-dev && rm -rf /var/lib/apt/lists/*"
+      - shell: bash
+        command: apt-get update && apt-get install -y --no-install-recommends libpcre2-dev && rm -rf /var/lib/apt/lists/*
     command: sleep infinity
 
 flow:
@@ -14,7 +15,8 @@ flow:
     container: haskell-container
     commands:
       - type: console
-        command: sh -c "mkdir -p /tmp/haskell-spectral-norm && ghc -O2 -XBangPatterns -threaded -rtsopts -XMagicHash /tmp/repo/benchmarks/haskell/spectral-norm/main.hs -outputdir /tmp/haskell-spectral-norm -odir /tmp/haskell-spectral-norm -hidir /tmp/haskell-spectral-norm -o /tmp/haskell-spectral-norm/main"
+        shell: sh
+        command: mkdir -p /tmp/haskell-spectral-norm && ghc -O2 -XBangPatterns -threaded -rtsopts -XMagicHash /tmp/repo/benchmarks/haskell/spectral-norm/main.hs -outputdir /tmp/haskell-spectral-norm -odir /tmp/haskell-spectral-norm -hidir /tmp/haskell-spectral-norm -o /tmp/haskell-spectral-norm/main
       - type: console
         command: /tmp/haskell-spectral-norm/main +RTS -N4 -RTS 5500
 
