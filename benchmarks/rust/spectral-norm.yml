@@ -7,7 +7,7 @@ services:
     image: rust:1.93-alpine
     setup-commands:
       - command: sh -lc "apk add --no-cache rust cargo"
-      - command: sh -lc "mkdir -p /tmp/rust-prefetch/spectral-norm && cp /tmp/repo/benchmarks/rust/spectral-norm/Cargo.toml /tmp/rust-prefetch/spectral-norm/Cargo.toml && CARGO_HOME=/tmp/cargo-home cargo fetch --manifest-path /tmp/rust-prefetch/spectral-norm/Cargo.toml"
+      - command: sh -lc "mkdir -p /tmp/rust-prefetch/spectral-norm && cp /tmp/repo/benchmarks/rust/spectral-norm/Cargo.toml /tmp/rust-prefetch/spectral-norm/Cargo.toml && CARGO_HOME=/tmp/cargo-home cargo generate-lockfile --manifest-path /tmp/rust-prefetch/spectral-norm/Cargo.toml && CARGO_HOME=/tmp/cargo-home cargo fetch --locked --manifest-path /tmp/rust-prefetch/spectral-norm/Cargo.toml"
     command: sleep infinity
 
 flow:
