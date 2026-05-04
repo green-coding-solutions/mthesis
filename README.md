@@ -1,5 +1,9 @@
 # Towards a More Accurate Understanding of Programming Language Energy Efficiency
 
+> [!IMPORTANT]
+> This branch (`main`) is configured for the macOS/Apple Silicon setup.
+> For the Linux x86 setup, use the `feature/linux-x86` branch.
+
 ## Documentation
 
 - KWA v2 CLI docs: [`kwa/README.md`](kwa/README.md)
