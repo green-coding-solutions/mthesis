@@ -123,12 +123,12 @@ func newBatchCmd(execute executeRequestFunc) *cobra.Command {
 }
 
 // newByIDCmd builds the non-interactive single-run export command.
+// It accepts only run ID and output path flags, dispatches one by-id request,
+// writes a success line, and returns command execution errors.
 func newByIDCmd(execute executeRequestFunc) *cobra.Command {
 	var (
-		runID     string
-		outPath   string
-		fromInput string
-		toInput   string
+		runID   string
+		outPath string
 	)
 
 	byIDCmd := &cobra.Command{
@@ -136,16 +136,10 @@ func newByIDCmd(execute executeRequestFunc) *cobra.Command {
 		Aliases: []string{"byID"},
 		Short:   "Export measurements for one run ID",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			timeRange, err := appexport.ParseTimeRange(fromInput, toInput)
-			if err != nil {
-				return err
-			}
-
 			req := appexport.Request{
-				Mode:      constant.ExportModeByID,
-				RunID:     runID,
-				OutPath:   outPath,
-				TimeRange: timeRange,
+				Mode:    constant.ExportModeByID,
+				RunID:   runID,
+				OutPath: outPath,
 			}
 			if err := execute(cmd.Context(), req); err != nil {
 				return err
@@ -158,8 +152,6 @@ func newByIDCmd(execute executeRequestFunc) *cobra.Command {
 
 	byIDCmd.Flags().StringVar(&runID, "run-id", "", "run ID to export")
 	byIDCmd.Flags().StringVar(&outPath, "out", constant.DefaultOutPath, "output CSV file path")
-	byIDCmd.Flags().StringVar(&fromInput, "from", "", "start timestamp (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)")
-	byIDCmd.Flags().StringVar(&toInput, "to", "", "end timestamp (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)")
 	_ = byIDCmd.MarkFlagRequired("run-id")
 
 	return byIDCmd

@@ -56,7 +56,6 @@ WITH filtered AS (
   FROM phase_stats
   WHERE run_id = $1
     AND %s
-    AND ($2::timestamp IS NULL OR created_at BETWEEN $2::timestamp AND $3::timestamp)
 ),
 dedup AS (
   SELECT run_id, phase, k, MAX(value) AS value, MAX(created_at) AS created_at
@@ -112,16 +111,14 @@ ORDER BY k;
 `, metricKeyExpression, phaseFilterClause)
 
 // GetPhaseMetricsByID fetches all aggregated phase rows for a single run.
-func (s *service) GetPhaseMetricsByID(ctx context.Context, runID string, filter entity.TimeRangeFilter) ([]entity.PhaseMetrics, error) {
+// It requires a non-empty runID, queries without timestamp filtering, and
+// returns scanned phase metric rows or wrapped query/scan errors.
+func (s *service) GetPhaseMetricsByID(ctx context.Context, runID string) ([]entity.PhaseMetrics, error) {
 	if strings.TrimSpace(runID) == "" {
 		return nil, fmt.Errorf("runID must not be empty")
 	}
-	if err := filter.Validate(); err != nil {
-		return nil, err
-	}
-	filter = filter.Clone()
 
-	rows, err := s.db.QueryContext(ctx, getPhaseMetricsQueryByID, runID, filter.From, filter.To)
+	rows, err := s.db.QueryContext(ctx, getPhaseMetricsQueryByID, runID)
 	if err != nil {
 		return nil, fmt.Errorf("query phase metrics for run_id %q: %w", runID, err)
 	}

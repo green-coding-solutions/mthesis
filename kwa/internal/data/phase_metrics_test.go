@@ -35,11 +35,11 @@ func TestGetPhaseMetricsByID_Success(t *testing.T) {
 		AddRow(runID, createdAtTwo, "006_Go-Fasta", nil)
 
 	mock.ExpectQuery(regexp.QuoteMeta(getPhaseMetricsQueryByID)).
-		WithArgs(runID, nil, nil).
+		WithArgs(runID).
 		WillReturnRows(rows)
 
 	svc := &service{db: db}
-	got, err := svc.GetPhaseMetricsByID(context.Background(), runID, entity.TimeRangeFilter{})
+	got, err := svc.GetPhaseMetricsByID(context.Background(), runID)
 	if err != nil {
 		t.Fatalf("GetPhaseMetricsByID() error = %v", err)
 	}
@@ -77,7 +77,7 @@ func TestGetPhaseMetricsByID_Success(t *testing.T) {
 
 func TestGetPhaseMetricsByID_EmptyRunID(t *testing.T) {
 	svc := &service{}
-	_, err := svc.GetPhaseMetricsByID(context.Background(), " ", entity.TimeRangeFilter{})
+	_, err := svc.GetPhaseMetricsByID(context.Background(), " ")
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}
@@ -94,11 +94,11 @@ func TestGetPhaseMetricsByID_QueryError(t *testing.T) {
 
 	runID := "run-id"
 	mock.ExpectQuery(regexp.QuoteMeta(getPhaseMetricsQueryByID)).
-		WithArgs(runID, nil, nil).
+		WithArgs(runID).
 		WillReturnError(errors.New("db down"))
 
 	svc := &service{db: db}
-	_, err = svc.GetPhaseMetricsByID(context.Background(), runID, entity.TimeRangeFilter{})
+	_, err = svc.GetPhaseMetricsByID(context.Background(), runID)
 	if err == nil {
 		t.Fatalf("GetPhaseMetricsByID() error = nil, want non-nil")
 	}
@@ -121,11 +121,11 @@ func TestGetPhaseMetricsByID_InvalidMetricsJSON(t *testing.T) {
 		AddRow(runID, time.Date(2026, time.April, 1, 10, 0, 0, 0, time.UTC), "005_Go-Binary-Trees", []byte(`{"invalid-json"`))
 
 	mock.ExpectQuery(regexp.QuoteMeta(getPhaseMetricsQueryByID)).
-		WithArgs(runID, nil, nil).
+		WithArgs(runID).
 		WillReturnRows(rows)
 
 	svc := &service{db: db}
-	_, err = svc.GetPhaseMetricsByID(context.Background(), runID, entity.TimeRangeFilter{})
+	_, err = svc.GetPhaseMetricsByID(context.Background(), runID)
 	if err == nil {
 		t.Fatalf("GetPhaseMetricsByID() error = nil, want non-nil")
 	}
@@ -307,7 +307,6 @@ func TestGetPhaseMetricsQueryByID_ContainsNormalizationAndDedup(t *testing.T) {
 		"regexp_replace(lower(detail_name), '[^a-z0-9]+', '_', 'g')",
 		"regexp_replace(lower(unit), '[^a-z0-9]+', '_', 'g')",
 		"phase !~* '\\[(baseline|installation|boot|idle|runtime|remove)\\]'",
-		"created_at BETWEEN $2::timestamp AND $3::timestamp",
 		"MAX(value) AS value",
 		"MAX(created_at) AS measured_at",
 		"jsonb_object_agg(k, value ORDER BY k)",
@@ -319,6 +318,10 @@ func TestGetPhaseMetricsQueryByID_ContainsNormalizationAndDedup(t *testing.T) {
 		if !strings.Contains(getPhaseMetricsQueryByID, fragment) {
 			t.Fatalf("query is missing required fragment %q", fragment)
 		}
+	}
+
+	if strings.Contains(getPhaseMetricsQueryByID, "created_at BETWEEN") {
+		t.Fatalf("by-id query must not contain timestamp range filtering")
 	}
 }
 
@@ -334,19 +337,6 @@ func TestGetPhaseMetricsBatchQuery_ContainsPagination(t *testing.T) {
 		if !strings.Contains(getPhaseMetricsBatchQuery, fragment) {
 			t.Fatalf("batch query is missing required fragment %q", fragment)
 		}
-	}
-}
-
-func TestGetPhaseMetricsByID_InvalidDateRange(t *testing.T) {
-	svc := &service{}
-	from := time.Date(2026, time.April, 2, 0, 0, 0, 0, time.UTC)
-	to := time.Date(2026, time.April, 1, 0, 0, 0, 0, time.UTC)
-
-	if _, err := svc.GetPhaseMetricsByID(context.Background(), "run-1", entity.TimeRangeFilter{From: &from}); err == nil {
-		t.Fatalf("expected partial bounds error")
-	}
-	if _, err := svc.GetPhaseMetricsByID(context.Background(), "run-1", entity.TimeRangeFilter{From: &from, To: &to}); err == nil {
-		t.Fatalf("expected inverted bounds error")
 	}
 }
 

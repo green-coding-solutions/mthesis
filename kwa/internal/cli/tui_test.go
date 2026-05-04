@@ -135,15 +135,16 @@ func TestBuildRequestFromFormValidationAndDefaults(t *testing.T) {
 
 	byIDModel := newTestModel()
 	byIDModel.initForm(constant.ExportModeByID)
+	if len(byIDModel.fields) != 2 {
+		t.Fatalf("byID field count = %d, want 2", len(byIDModel.fields))
+	}
 	byIDModel.fields[0].value = ""
 	if _, err := byIDModel.buildRequestFromForm(); err == nil {
 		t.Fatalf("expected missing run ID error, got nil")
 	}
 
 	byIDModel.fields[0].value = "run-99"
-	byIDModel.fields[1].value = "2026-04-01"
-	byIDModel.fields[2].value = "2026-04-02 10:00:00"
-	byIDModel.fields[3].value = "exports/by-id"
+	byIDModel.fields[1].value = "exports/by-id"
 	byIDReq, err := byIDModel.buildRequestFromForm()
 	if err != nil {
 		t.Fatalf("buildRequestFromForm() by-id: %v", err)
@@ -151,11 +152,8 @@ func TestBuildRequestFromFormValidationAndDefaults(t *testing.T) {
 	if byIDReq.OutPath != "exports/by-id.csv" {
 		t.Fatalf("out path = %q, want %q", byIDReq.OutPath, "exports/by-id.csv")
 	}
-	if byIDReq.TimeRange.From == nil || byIDReq.TimeRange.To == nil {
-		t.Fatalf("expected parsed date range, got from=%v to=%v", byIDReq.TimeRange.From, byIDReq.TimeRange.To)
-	}
-	if byIDReq.TimeRange.From.Format(appexport.TimestampLayout) != "2026-04-01 00:00:00" {
-		t.Fatalf("from = %q, want %q", byIDReq.TimeRange.From.Format(appexport.TimestampLayout), "2026-04-01 00:00:00")
+	if byIDReq.TimeRange.From != nil || byIDReq.TimeRange.To != nil {
+		t.Fatalf("expected empty by-id date range, got from=%v to=%v", byIDReq.TimeRange.From, byIDReq.TimeRange.To)
 	}
 }
 

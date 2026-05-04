@@ -31,7 +31,7 @@ func (f *fakeDataService) GetPhaseMetricsBatch(context.Context, int, int, entity
 	return []entity.PhaseMetrics{}, nil
 }
 
-func (f *fakeDataService) GetPhaseMetricsByID(context.Context, string, entity.TimeRangeFilter) ([]entity.PhaseMetrics, error) {
+func (f *fakeDataService) GetPhaseMetricsByID(context.Context, string) ([]entity.PhaseMetrics, error) {
 	return []entity.PhaseMetrics{}, nil
 }
 
@@ -53,8 +53,7 @@ type batchCall struct {
 }
 
 type byIDCall struct {
-	runID  string
-	filter entity.TimeRangeFilter
+	runID string
 }
 
 func (f *fakeCLIHandler) ExportBatch(_ context.Context, _ io.Writer, batchSize int, filter entity.TimeRangeFilter) error {
@@ -65,10 +64,9 @@ func (f *fakeCLIHandler) ExportBatch(_ context.Context, _ io.Writer, batchSize i
 	return f.batchErr
 }
 
-func (f *fakeCLIHandler) ExportByID(_ context.Context, _ io.Writer, runID string, filter entity.TimeRangeFilter) error {
+func (f *fakeCLIHandler) ExportByID(_ context.Context, _ io.Writer, runID string) error {
 	f.byIDCalls = append(f.byIDCalls, byIDCall{
-		runID:  runID,
-		filter: filter.Clone(),
+		runID: runID,
 	})
 	return f.byIDErr
 }
@@ -79,7 +77,7 @@ func (fakeExporter) ExportMeasurementsCSV(context.Context, io.Writer, int, entit
 	return nil
 }
 
-func (fakeExporter) ExportMeasurementsCSVByID(context.Context, io.Writer, string, entity.TimeRangeFilter) error {
+func (fakeExporter) ExportMeasurementsCSVByID(context.Context, io.Writer, string) error {
 	return nil
 }
 
@@ -150,15 +148,18 @@ func TestExecuteByID_Success(t *testing.T) {
 	}
 
 	executor := NewExecutorWithDeps(deps)
-	err := executor.Execute(context.Background(), Request{Mode: constant.ExportModeByID, RunID: "run-42", OutPath: outPath})
+	from := time.Now()
+	err := executor.Execute(context.Background(), Request{
+		Mode:      constant.ExportModeByID,
+		RunID:     "run-42",
+		OutPath:   outPath,
+		TimeRange: entity.TimeRangeFilter{From: &from},
+	})
 	if err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
 	if len(handler.byIDCalls) != 1 || handler.byIDCalls[0].runID != "run-42" {
 		t.Fatalf("unexpected by-id calls: %#v", handler.byIDCalls)
-	}
-	if handler.byIDCalls[0].filter.From != nil || handler.byIDCalls[0].filter.To != nil {
-		t.Fatalf("unexpected time range in by-id call: %#v", handler.byIDCalls[0])
 	}
 }
 

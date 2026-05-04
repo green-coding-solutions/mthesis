@@ -25,8 +25,7 @@ type batchCall struct {
 }
 
 type byIDCall struct {
-	runID  string
-	filter entity.TimeRangeFilter
+	runID string
 }
 
 type fakePhaseMetricsProvider struct {
@@ -80,11 +79,9 @@ func (f *fakePhaseMetricsProvider) GetPhaseMetricsBatch(
 func (f *fakePhaseMetricsProvider) GetPhaseMetricsByID(
 	_ context.Context,
 	runID string,
-	filter entity.TimeRangeFilter,
 ) ([]entity.PhaseMetrics, error) {
 	f.getByIDCalls = append(f.getByIDCalls, byIDCall{
-		runID:  runID,
-		filter: filter.Clone(),
+		runID: runID,
 	})
 	if err, ok := f.phaseMetricsByIDErr[runID]; ok {
 		return nil, err
@@ -503,7 +500,7 @@ func TestExportMeasurementsCSVByID_Success(t *testing.T) {
 	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
 
 	var out bytes.Buffer
-	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID, entity.TimeRangeFilter{})
+	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID)
 	if err != nil {
 		t.Fatalf("ExportMeasurementsCSVByID() error = %v", err)
 	}
@@ -544,7 +541,7 @@ func TestExportMeasurementsCSVByID_Success(t *testing.T) {
 	}
 
 	wantByIDCalls := []byIDCall{
-		{runID: runID, filter: entity.TimeRangeFilter{}},
+		{runID: runID},
 	}
 	if !reflect.DeepEqual(provider.getByIDCalls, wantByIDCalls) {
 		t.Fatalf("get by ID calls mismatch:\n got=%#v\nwant=%#v", provider.getByIDCalls, wantByIDCalls)
@@ -558,7 +555,7 @@ func TestExportMeasurementsCSVByID_GetMetricKeysError(t *testing.T) {
 	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
 
 	var out bytes.Buffer
-	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, "run-1", entity.TimeRangeFilter{})
+	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, "run-1")
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}
@@ -575,7 +572,7 @@ func TestExportMeasurementsCSVByID_GetPhaseMetricsByIDError(t *testing.T) {
 	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
 
 	var out bytes.Buffer
-	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID, entity.TimeRangeFilter{})
+	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID)
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}
@@ -598,7 +595,7 @@ func TestExportMeasurementsCSVByID_ParseError(t *testing.T) {
 	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
 
 	var out bytes.Buffer
-	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID, entity.TimeRangeFilter{})
+	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID)
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}
@@ -633,7 +630,7 @@ func TestExportMeasurementsCSVByID_UnknownLanguageOrBenchmark_LogsAndContinues(t
 	exporterService.errorLogPath = logPath
 
 	var out bytes.Buffer
-	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID, entity.TimeRangeFilter{})
+	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID)
 	if err != nil {
 		t.Fatalf("ExportMeasurementsCSVByID() error = %v", err)
 	}
@@ -699,40 +696,11 @@ func TestExportMeasurementsCSVByID_InvalidArguments(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.service.ExportMeasurementsCSVByID(context.Background(), tc.writer, tc.runID, entity.TimeRangeFilter{})
+			err := tc.service.ExportMeasurementsCSVByID(context.Background(), tc.writer, tc.runID)
 			if err == nil {
 				t.Fatalf("expected error, got nil")
 			}
 		})
-	}
-}
-
-func TestExportMeasurementsCSVByID_PropagatesDateRangeToProvider(t *testing.T) {
-	const runID = "run-1"
-	provider := &fakePhaseMetricsProvider{
-		metricKeys: []string{"k"},
-		phaseMetricsByID: map[string][]entity.PhaseMetrics{
-			runID: []entity.PhaseMetrics{},
-		},
-	}
-	exporterService := withTempErrorLogPath(t, NewExporterService(NewParserService(), provider))
-
-	from := time.Date(2026, time.April, 1, 10, 0, 0, 0, time.Local)
-	to := time.Date(2026, time.April, 1, 11, 0, 0, 0, time.Local)
-
-	var out bytes.Buffer
-	err := exporterService.ExportMeasurementsCSVByID(context.Background(), &out, runID, entity.TimeRangeFilter{From: &from, To: &to})
-	if err != nil {
-		t.Fatalf("ExportMeasurementsCSVByID() error = %v", err)
-	}
-	wantCalls := []byIDCall{
-		{runID: runID, filter: entity.TimeRangeFilter{From: &from, To: &to}},
-	}
-	if len(provider.getByIDCalls) != 1 {
-		t.Fatalf("expected one by-id provider call, got %#v", provider.getByIDCalls)
-	}
-	if !reflect.DeepEqual(provider.getByIDCalls, wantCalls) {
-		t.Fatalf("unexpected by-id calls: got=%#v want=%#v", provider.getByIDCalls, wantCalls)
 	}
 }
 

@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// TimeRangeFilter represents an optional inclusive time window used by export queries.
+// TimeRangeFilter represents an optional inclusive time window used by batch export queries.
 type TimeRangeFilter struct {
 	From *time.Time
 	To   *time.Time

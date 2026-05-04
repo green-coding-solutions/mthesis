@@ -25,7 +25,7 @@ type DataService interface {
 // CLIHandler defines the API operations used by orchestration.
 type CLIHandler interface {
 	ExportBatch(ctx context.Context, w io.Writer, batchSize int, filter entity.TimeRangeFilter) error
-	ExportByID(ctx context.Context, w io.Writer, runID string, filter entity.TimeRangeFilter) error
+	ExportByID(ctx context.Context, w io.Writer, runID string) error
 }
 
 // Dependencies defines overridable constructors used to build runtime dependencies.
@@ -94,6 +94,8 @@ func defaultDependencies() Dependencies {
 
 // Execute runs one export request by wiring runtime dependencies and delegating
 // mode-specific work to the CLI handler.
+// It validates the request, creates the output file, closes resources, and
+// returns wrapped config, data, output, or export errors.
 func (e *Executor) Execute(ctx context.Context, req Request) error {
 	normalizedReq, err := validateAndNormalizeRequest(req)
 	if err != nil {
@@ -134,7 +136,7 @@ func (e *Executor) Execute(ctx context.Context, req Request) error {
 			return fmt.Errorf("batch export failed: %w", err)
 		}
 	case constant.ExportModeByID:
-		if err := handler.ExportByID(ctx, outFile, normalizedReq.RunID, normalizedReq.TimeRange); err != nil {
+		if err := handler.ExportByID(ctx, outFile, normalizedReq.RunID); err != nil {
 			return fmt.Errorf("single-run export failed: %w", err)
 		}
 	default:
@@ -153,29 +155,30 @@ func (e *Executor) writeWarning(format string, args ...any) {
 	_, _ = fmt.Fprintf(e.deps.Stderr, format, args...)
 }
 
-// validateAndNormalizeRequest applies defaults and validates export request invariants.
+// validateAndNormalizeRequest applies output defaults and validates one request.
+// Batch requests must include a positive batch size and valid optional time
+// range; by-id requests require a run ID and discard any hidden time range.
 func validateAndNormalizeRequest(req Request) (Request, error) {
 	req.OutPath = strings.TrimSpace(req.OutPath)
 	if req.OutPath == "" {
 		req.OutPath = constant.DefaultOutPath
 	}
 
-	if err := req.TimeRange.Validate(); err != nil {
-		return Request{}, err
-	}
-
-	req.TimeRange = req.TimeRange.Clone()
-
 	switch req.Mode {
 	case constant.ExportModeBatch:
 		if req.BatchSize <= 0 {
 			return Request{}, fmt.Errorf("batch size must be greater than zero")
 		}
+		if err := req.TimeRange.Validate(); err != nil {
+			return Request{}, err
+		}
+		req.TimeRange = req.TimeRange.Clone()
 	case constant.ExportModeByID:
 		req.RunID = strings.TrimSpace(req.RunID)
 		if req.RunID == "" {
 			return Request{}, fmt.Errorf("run ID must not be empty")
 		}
+		req.TimeRange = entity.TimeRangeFilter{}
 	default:
 		return Request{}, fmt.Errorf("invalid mode %q: use batch or by-id", req.Mode)
 	}

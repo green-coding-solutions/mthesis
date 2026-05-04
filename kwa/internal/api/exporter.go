@@ -11,7 +11,7 @@ import (
 // MeasurementsExporter defines the kwa-service capabilities used by CLI handlers.
 type MeasurementsExporter interface {
 	ExportMeasurementsCSV(ctx context.Context, w io.Writer, batchSize int, filter entity.TimeRangeFilter) error
-	ExportMeasurementsCSVByID(ctx context.Context, w io.Writer, runID string, filter entity.TimeRangeFilter) error
+	ExportMeasurementsCSVByID(ctx context.Context, w io.Writer, runID string) error
 }
 
 // CLIHandler is a thin API layer for CLI commands.
@@ -37,13 +37,15 @@ func (h *CLIHandler) ExportBatch(ctx context.Context, w io.Writer, batchSize int
 	return nil
 }
 
-// ExportByID handles single-run CSV export requests from CLI commands.
-func (h *CLIHandler) ExportByID(ctx context.Context, w io.Writer, runID string, filter entity.TimeRangeFilter) error {
+// ExportByID writes one run's measurements to the provided writer.
+// It requires a non-nil exporter, passes runID through without timestamp filters,
+// and returns wrapped service/export errors.
+func (h *CLIHandler) ExportByID(ctx context.Context, w io.Writer, runID string) error {
 	if h.exporter == nil {
 		return fmt.Errorf("kwa service must not be nil")
 	}
 
-	if err := h.exporter.ExportMeasurementsCSVByID(ctx, w, runID, filter); err != nil {
+	if err := h.exporter.ExportMeasurementsCSVByID(ctx, w, runID); err != nil {
 		return fmt.Errorf("export csv by run id %q: %w", runID, err)
 	}
 
