@@ -16,4 +16,5 @@ flow:
       - type: console
         command: sh /tmp/repo/benchmarks/csharp/regex-redux/build_in_tmp.sh
       - type: console
-        command: sh -c "/tmp/csharp-regex-redux 0 < /tmp/repo/inputs/fasta-100.txt"
+        shell: sh
+        command: /tmp/csharp-regex-redux 0 < /tmp/repo/inputs/fasta-100.txt
