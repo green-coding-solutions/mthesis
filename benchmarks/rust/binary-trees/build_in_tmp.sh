@@ -10,6 +10,7 @@ mkdir -p "$SRC_DIR"
 
 cp /tmp/repo/benchmarks/rust/binary-trees/main.rs "$SRC_DIR/main.rs"
 cp /tmp/repo/benchmarks/rust/binary-trees/Cargo.toml "$SRC_DIR/Cargo.toml"
+cp /tmp/rust-prefetch/binary-trees/Cargo.lock "$SRC_DIR/Cargo.lock"
 
 RUSTFLAGS_VALUE="-C opt-level=3 -C target-cpu=ivybridge -C codegen-units=1"
 if [ -d /opt/src/rust-libs ]; then
@@ -20,4 +21,4 @@ cd "$SRC_DIR"
 CARGO_HOME="$CARGO_HOME_DIR" \
 CARGO_TARGET_DIR="$TARGET_DIR" \
 RUSTFLAGS="$RUSTFLAGS_VALUE" \
-cargo build --release
+cargo build --release --locked --offline

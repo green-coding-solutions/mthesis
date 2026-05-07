@@ -17,8 +17,7 @@ type batchCall struct {
 }
 
 type byIDCall struct {
-	runID  string
-	filter entity.TimeRangeFilter
+	runID string
 }
 
 type fakeExporter struct {
@@ -37,10 +36,9 @@ func (f *fakeExporter) ExportMeasurementsCSV(_ context.Context, _ io.Writer, bat
 	return f.batchErr
 }
 
-func (f *fakeExporter) ExportMeasurementsCSVByID(_ context.Context, _ io.Writer, runID string, filter entity.TimeRangeFilter) error {
+func (f *fakeExporter) ExportMeasurementsCSVByID(_ context.Context, _ io.Writer, runID string) error {
 	f.byIDCalls = append(f.byIDCalls, byIDCall{
-		runID:  runID,
-		filter: filter.Clone(),
+		runID: runID,
 	})
 	return f.byIDErr
 }
@@ -82,13 +80,13 @@ func TestExportByID_Success(t *testing.T) {
 	exp := &fakeExporter{}
 	handler := NewCLIHandler(exp)
 
-	err := handler.ExportByID(context.Background(), &bytes.Buffer{}, "run-1", entity.TimeRangeFilter{})
+	err := handler.ExportByID(context.Background(), &bytes.Buffer{}, "run-1")
 	if err != nil {
 		t.Fatalf("ExportByID() error = %v", err)
 	}
 
-	if !reflect.DeepEqual(exp.byIDCalls, []byIDCall{{runID: "run-1", filter: entity.TimeRangeFilter{}}}) {
-		t.Fatalf("byID calls mismatch: got=%#v want=%#v", exp.byIDCalls, []byIDCall{{runID: "run-1", filter: entity.TimeRangeFilter{}}})
+	if !reflect.DeepEqual(exp.byIDCalls, []byIDCall{{runID: "run-1"}}) {
+		t.Fatalf("byID calls mismatch: got=%#v want=%#v", exp.byIDCalls, []byIDCall{{runID: "run-1"}})
 	}
 }
 
@@ -96,7 +94,7 @@ func TestExportByID_Error(t *testing.T) {
 	exp := &fakeExporter{byIDErr: errors.New("boom")}
 	handler := NewCLIHandler(exp)
 
-	err := handler.ExportByID(context.Background(), &bytes.Buffer{}, "run-1", entity.TimeRangeFilter{})
+	err := handler.ExportByID(context.Background(), &bytes.Buffer{}, "run-1")
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}
@@ -105,7 +103,7 @@ func TestExportByID_Error(t *testing.T) {
 func TestExportByID_NilExporter(t *testing.T) {
 	handler := NewCLIHandler(nil)
 
-	err := handler.ExportByID(context.Background(), &bytes.Buffer{}, "run-1", entity.TimeRangeFilter{})
+	err := handler.ExportByID(context.Background(), &bytes.Buffer{}, "run-1")
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}

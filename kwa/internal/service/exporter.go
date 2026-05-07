@@ -32,7 +32,7 @@ type batchFetchResult struct {
 type PhaseMetricsBatchProvider interface {
 	GetMetricKeys(ctx context.Context) ([]string, error)
 	GetPhaseMetricsBatch(ctx context.Context, limit, offset int, filter entity.TimeRangeFilter) ([]entity.PhaseMetrics, error)
-	GetPhaseMetricsByID(ctx context.Context, runID string, filter entity.TimeRangeFilter) ([]entity.PhaseMetrics, error)
+	GetPhaseMetricsByID(ctx context.Context, runID string) ([]entity.PhaseMetrics, error)
 }
 
 // NewExporterService builds an exporter service with parser defaults and data source dependencies.
@@ -115,13 +115,13 @@ func (s *ExporterService) ExportMeasurementsCSV(
 	return nil
 }
 
-// ExportMeasurementsCSVByID writes measurements to CSV for a single run ID.
-// Header layout is fixed: run_id,measured_at,language,benchmark,<metric keys...>.
+// ExportMeasurementsCSVByID writes CSV rows for a single run ID without timestamp filters.
+// It requires a writer, provider, and non-empty runID, writes an error log for
+// skipped phases, and returns wrapped load, parse, write, or flush errors.
 func (s *ExporterService) ExportMeasurementsCSVByID(
 	ctx context.Context,
 	w io.Writer,
 	runID string,
-	filter entity.TimeRangeFilter,
 ) error {
 	if err := s.validateWriterAndProvider(w); err != nil {
 		return err
@@ -129,10 +129,6 @@ func (s *ExporterService) ExportMeasurementsCSVByID(
 	if strings.TrimSpace(runID) == "" {
 		return fmt.Errorf("runID must not be empty")
 	}
-	if err := filter.Validate(); err != nil {
-		return err
-	}
-	filter = filter.Clone()
 
 	csvWriter, metricKeys, err := s.newCSVWriterWithHeader(ctx, w)
 	if err != nil {
@@ -144,7 +140,7 @@ func (s *ExporterService) ExportMeasurementsCSVByID(
 	}
 	defer errorLog.Close()
 
-	phaseMetricsByID, err := s.phaseMetricsSource.GetPhaseMetricsByID(ctx, runID, filter)
+	phaseMetricsByID, err := s.phaseMetricsSource.GetPhaseMetricsByID(ctx, runID)
 	if err != nil {
 		return fmt.Errorf("load phase metrics for run %q: %w", runID, err)
 	}

@@ -65,6 +65,8 @@ func (m *model) startFormForSelected() {
 }
 
 // initForm builds the field list and defaults for batch/by-id export forms.
+// Batch forms include optional timestamps, while by-id forms collect only run
+// ID and filename; it mutates model form state and produces no command.
 func (m *model) initForm(mode constant.ExportMode) {
 	m.state = screenForm
 	m.formMode = mode
@@ -97,14 +99,6 @@ func (m *model) initForm(mode constant.ExportMode) {
 		m.fields = []fieldState{
 			{
 				spec:  fieldSpec{label: "Run ID", placeholder: "paste run ID"},
-				value: "",
-			},
-			{
-				spec:  fieldSpec{label: "From timestamp (optional)", placeholder: "YYYY-MM-DD or YYYY-MM-DD HH:MM:SS"},
-				value: "",
-			},
-			{
-				spec:  fieldSpec{label: "To timestamp (optional)", placeholder: "YYYY-MM-DD or YYYY-MM-DD HH:MM:SS"},
 				value: "",
 			},
 			{
@@ -478,6 +472,8 @@ func (m model) startMeasureFromForm() (tea.Model, tea.Cmd) {
 }
 
 // buildRequestFromForm maps batch/by-id form values into a validated export request.
+// It parses batch size and optional batch timestamps, requires by-id run ID,
+// resolves output paths, and returns validation errors without starting I/O.
 func (m model) buildRequestFromForm() (appexport.Request, error) {
 	switch m.formMode {
 	case constant.ExportModeBatch:
@@ -509,17 +505,11 @@ func (m model) buildRequestFromForm() (appexport.Request, error) {
 			return appexport.Request{}, fmt.Errorf("run ID is required")
 		}
 
-		timeRange, err := appexport.ParseTimeRange(m.fields[1].value, m.fields[2].value)
-		if err != nil {
-			return appexport.Request{}, err
-		}
-
-		outPath := buildOutputPath(m.fields[3].value)
+		outPath := buildOutputPath(m.fields[1].value)
 		return appexport.Request{
-			Mode:      constant.ExportModeByID,
-			RunID:     runID,
-			OutPath:   outPath,
-			TimeRange: timeRange,
+			Mode:    constant.ExportModeByID,
+			RunID:   runID,
+			OutPath: outPath,
 		}, nil
 	default:
 		return appexport.Request{}, fmt.Errorf("unsupported form mode %q", m.formMode)

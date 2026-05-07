@@ -5,6 +5,8 @@ description: CSharp benchmarks using .NET SDK 9.0
 services:
   csharp-container:
     image: mcr.microsoft.com/dotnet/sdk:9.0
+    setup-commands:
+      - command: sh /tmp/repo/benchmarks/csharp/setup_dependencies.sh
     command: sleep infinity
 
 flow:
@@ -12,7 +14,6 @@ flow:
     container: csharp-container
     commands:
       - type: console
-        shell: bash
-        command: dotnet new console -n app --output /tmp/out --force && cp /tmp/repo/benchmarks/csharp/fasta/main.cs /tmp/out/Program.cs && cd /tmp/out && dotnet build -c Release -p:AllowUnsafeBlocks=true
+        command: sh /tmp/repo/benchmarks/csharp/fasta/build_in_tmp.sh
       - type: console
-        command: dotnet /tmp/out/bin/Release/net9.0/app.dll 100
+        command: /tmp/csharp-fasta 100

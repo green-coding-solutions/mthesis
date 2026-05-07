@@ -10,7 +10,7 @@ Version 2 supports:
 - Export modes: `batch` and `by-id`.
 - Interactive `measure` workflow that runs `scripts/measure.sh` and then auto-exports the captured interval.
 - Exports ordered by most recent `created_at`.
-- Optional date-range filtering (`created_at BETWEEN from AND to`).
+- Optional batch date-range filtering (`created_at BETWEEN from AND to`).
 
 ## Prerequisites
 
@@ -48,8 +48,6 @@ Running `kwa` with no subcommand:
   - `Filename` (default `measurements.csv`)
 - `Export (by Run ID)`
   - `Run ID` (required)
-  - `From timestamp` (optional, `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`)
-  - `To timestamp` (optional, `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`)
   - `Filename` (default `measurements.csv`)
 - `Measure`
   - Step 1: benchmark multi-select (8 options)
@@ -63,7 +61,7 @@ Running `kwa` with no subcommand:
     - captures start/end timestamps in memory
     - runs `batch` export for the inclusive interval `[start, end]`
 
-Date input behavior:
+Batch date input behavior:
 - If only date is provided, time defaults to `00:00:00`.
 - Both `from` and `to` must be provided together, or both left empty.
 - If both are empty, no date filter is applied.
@@ -118,19 +116,17 @@ Flags:
 ### Export by run ID
 
 ```bash
-./kwa by-id --run-id <RUN_ID> --from "2026-04-01" --to "2026-04-02 23:59:59" --out results/measurements.csv
+./kwa by-id --run-id <RUN_ID> --out results/measurements.csv
 ```
 
 Alias:
 
 ```bash
-./kwa byID --run-id <RUN_ID> --from "2026-04-01" --to "2026-04-02 23:59:59" --out results/measurements.csv
+./kwa byID --run-id <RUN_ID> --out results/measurements.csv
 ```
 
 Flags:
 - `--run-id` (required)
-- `--from` (optional timestamp: `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`)
-- `--to` (optional timestamp: `YYYY-MM-DD` or `YYYY-MM-DD HH:MM:SS`)
 - `--out` (default: `results/measurements.csv`)
 
 ## Troubleshooting

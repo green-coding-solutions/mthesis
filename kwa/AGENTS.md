@@ -27,7 +27,7 @@ Concrete package roles:
 
 - `cmd/main.go`: entrypoint, delegates to `internal/cli`.
 - `internal/cli`: Cobra command wiring + Bubble Tea TUI state/update/view.
-- `internal/app/export`: request contract, timestamp parsing/validation, dependency orchestration, output file creation.
+- `internal/app/export`: request contract, batch timestamp parsing/validation, dependency orchestration, output file creation.
 - `internal/api`: thin adapter from CLI/executor calls into exporter service.
 - `internal/service`: parser + CSV export pipeline and row serialization.
 - `internal/data`: SQL queries, row scanning, metric-key discovery.
@@ -48,7 +48,7 @@ Concrete package roles:
 
 ### 2) `by-id` command
 
-1. `internal/cli/root.go` parses `--run-id` plus optional `--from/--to/--out`.
+1. `internal/cli/root.go` parses `--run-id` plus optional `--out`.
 2. Same executor wiring path as batch mode.
 3. API handler calls `service.ExportMeasurementsCSVByID(...)`.
 4. Service fetches one run's phase rows and writes CSV.
@@ -59,7 +59,7 @@ Concrete package roles:
 2. Menu options:
    - `batch export`
    - `byID export`
-3. Form inputs include optional from/to timestamps and `fileName`.
+3. Batch form inputs include optional from/to timestamps and `fileName`; byID form inputs include `runID` and `fileName`.
 4. Form submit builds `appexport.Request`, then async export command runs via same executor path.
 5. Result screen shows output path and final status.
 
@@ -72,15 +72,16 @@ Concrete package roles:
   - `ORDER BY MAX(created_at) DESC, run_id, phase`
 - Tie-breakers (`run_id`, `phase`) keep stable output order for identical timestamps.
 
-### Optional date-range filtering
+### Optional batch date-range filtering
 
-- SQL filter is optional and inclusive:
+- SQL filter is optional, batch-only, and inclusive:
   - `created_at BETWEEN from AND to`
 - No filter is applied when both bounds are empty (`nil`).
 - `from` and `to` are all-or-nothing; one bound alone is invalid.
 - `from > to` is invalid.
+- By-id export does not accept or apply timestamp filters.
 
-### Timestamp input parsing
+### Batch timestamp input parsing
 
 Accepted input formats:
 

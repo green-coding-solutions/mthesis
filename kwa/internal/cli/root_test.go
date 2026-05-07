@@ -6,7 +6,6 @@ import (
 	"io"
 	"strings"
 	"testing"
-	"time"
 
 	appexport "mthesis/kwa/internal/app/export"
 	appmeasure "mthesis/kwa/internal/app/measure"
@@ -206,7 +205,7 @@ func TestBatchCommandParsesDateRange(t *testing.T) {
 	}
 }
 
-func TestByIDCommandRejectsPartialDateRange(t *testing.T) {
+func TestByIDCommandRejectsTimestampFlags(t *testing.T) {
 	t.Parallel()
 
 	deps := rootDependencies{
@@ -222,40 +221,9 @@ func TestByIDCommandRejectsPartialDateRange(t *testing.T) {
 
 	err := cmd.Execute()
 	if err == nil {
-		t.Fatalf("expected partial date range error")
+		t.Fatalf("expected unknown timestamp flag error")
 	}
-	if !strings.Contains(err.Error(), "from and to must both be provided") {
+	if !strings.Contains(err.Error(), "unknown flag: --from") {
 		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
-func TestByIDCommandPassesDateRange(t *testing.T) {
-	t.Parallel()
-
-	var got appexport.Request
-	deps := rootDependencies{
-		execute: func(_ context.Context, req appexport.Request) error {
-			got = req
-			return nil
-		},
-		executeMeasure: func(context.Context, appmeasure.Request) error { return nil },
-		runTUI:         func(context.Context, executeRequestFunc, executeMeasureFunc, io.Writer, io.Writer) error { return nil },
-	}
-
-	cmd := newRootCmd(deps)
-	cmd.SetOut(io.Discard)
-	cmd.SetErr(io.Discard)
-	cmd.SetArgs([]string{"by-id", "--run-id", "run-1", "--from", "2026-04-01 10:00:00", "--to", "2026-04-01 11:00:00"})
-
-	if err := cmd.Execute(); err != nil {
-		t.Fatalf("execute by-id date range command: %v", err)
-	}
-	if got.TimeRange.From == nil || got.TimeRange.To == nil {
-		t.Fatalf("expected non-nil range")
-	}
-	wantFrom := time.Date(2026, time.April, 1, 10, 0, 0, 0, time.Local)
-	wantTo := time.Date(2026, time.April, 1, 11, 0, 0, 0, time.Local)
-	if !got.TimeRange.From.Equal(wantFrom) || !got.TimeRange.To.Equal(wantTo) {
-		t.Fatalf("unexpected range: got from=%v to=%v", got.TimeRange.From, got.TimeRange.To)
 	}
 }

@@ -14,8 +14,8 @@ import (
 
 // Service defines the data operations required by export orchestration.
 type Service interface {
-	// GetPhaseMetricsByID returns parsed-ready phase metric rows for a specific run.
-	GetPhaseMetricsByID(ctx context.Context, runID string, filter entity.TimeRangeFilter) ([]entity.PhaseMetrics, error)
+	// GetPhaseMetricsByID returns parsed-ready phase metric rows for a specific run without timestamp filtering.
+	GetPhaseMetricsByID(ctx context.Context, runID string) ([]entity.PhaseMetrics, error)
 	// GetPhaseMetricsBatch returns paginated phase metric rows across all runs.
 	GetPhaseMetricsBatch(ctx context.Context, limit, offset int, filter entity.TimeRangeFilter) ([]entity.PhaseMetrics, error)
 	// GetMetricKeys returns the full ordered metric-key set used for CSV headers.
