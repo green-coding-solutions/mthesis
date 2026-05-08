@@ -5,14 +5,14 @@ description: Dart benchmarks using Dart SDK 3.9.4
 services:
   dart-container:
     image: dart:3.9.4-sdk
+    setup-commands:
+      - command: dart compile exe /tmp/repo/benchmarks/dart/regex-redux/main.dart -o /tmp/main
     command: sleep infinity
 
 flow:
   - name: Dart-Regex-Redux
     container: dart-container
     commands:
-      - type: console
-        command: dart compile exe /tmp/repo/benchmarks/dart/regex-redux/main.dart -o /tmp/main
       - type: console
         shell: sh
         command: /tmp/main < /tmp/repo/inputs/fasta-5000000.txt

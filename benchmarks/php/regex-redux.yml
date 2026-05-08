@@ -8,14 +8,13 @@ services:
     setup-commands:
       - shell: sh
         command: docker-php-ext-install -j"$(nproc)" shmop pcntl sysvmsg && docker-php-ext-enable shmop pcntl sysvmsg
+      - command: sh /tmp/repo/benchmarks/php/regex-redux/build_in_tmp.sh
     command: sleep infinity
 
 flow:
   - name: PHP-Regex-Redux
     container: php-container
     commands:
-      - type: console
-        command: sh /tmp/repo/benchmarks/php/regex-redux/build_in_tmp.sh
       - type: console
         shell: sh
         command: /tmp/php-regex-redux < /tmp/repo/inputs/fasta-5000000.txt

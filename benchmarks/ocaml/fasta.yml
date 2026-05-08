@@ -5,13 +5,13 @@ description: OCaml benchmarks using native-code OCaml 5.4.0+dev0-2024-08-25
 services:
   ocaml-container:
     image: ocaml/opam:ubuntu-24.04-ocaml-5.4
+    setup-commands:
+      - command: sh /tmp/repo/benchmarks/ocaml/fasta/build_in_tmp.sh
     command: sleep infinity
 
 flow:
   - name: OCaml-Fasta
     container: ocaml-container
     commands:
-      - type: console
-        command: sh /tmp/repo/benchmarks/ocaml/fasta/build_in_tmp.sh
       - type: console
         command: /tmp/ocaml-fasta 25000000

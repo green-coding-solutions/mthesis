@@ -8,14 +8,13 @@ services:
     setup-commands:
       - shell: bash
         command: apt-get update && apt-get install -y --fix-missing libboost-dev && rm -rf /var/lib/apt/lists/*
+      - command: g++ -pipe -Wall -O3 -fomit-frame-pointer -march=native /tmp/repo/benchmarks/cpp/n-body/main.cpp -o /tmp/main
     command: sleep infinity
 
 flow:
   - name: CPP-N-Body
     container: cpp-container
     commands:
-      - type: console
-        command: g++ -pipe -Wall -O3 -fomit-frame-pointer -march=native /tmp/repo/benchmarks/cpp/n-body/main.cpp -o /tmp/main
       - type: console
         command: /tmp/main 500
 

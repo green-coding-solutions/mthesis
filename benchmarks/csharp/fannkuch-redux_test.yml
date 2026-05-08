@@ -7,13 +7,12 @@ services:
     image: mcr.microsoft.com/dotnet/sdk:9.0
     setup-commands:
       - command: sh /tmp/repo/benchmarks/csharp/setup_dependencies.sh
+      - command: sh /tmp/repo/benchmarks/csharp/fannkuch-redux/build_in_tmp.sh
     command: sleep infinity
 
 flow:
   - name: CSharp-Fannkuch-Redux
     container: csharp-container
     commands:
-      - type: console
-        command: sh /tmp/repo/benchmarks/csharp/fannkuch-redux/build_in_tmp.sh
       - type: console
         command: /tmp/csharp-fannkuch-redux 6

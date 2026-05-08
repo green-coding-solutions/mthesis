@@ -10,14 +10,13 @@ services:
         command: apk add --no-cache rust cargo
       - shell: sh
         command: mkdir -p /tmp/rust-prefetch/regex-redux && cp /tmp/repo/benchmarks/rust/regex-redux/Cargo.toml /tmp/rust-prefetch/regex-redux/Cargo.toml && CARGO_HOME=/tmp/cargo-home cargo generate-lockfile --manifest-path /tmp/rust-prefetch/regex-redux/Cargo.toml && CARGO_HOME=/tmp/cargo-home cargo fetch --locked --manifest-path /tmp/rust-prefetch/regex-redux/Cargo.toml
+      - command: sh /tmp/repo/benchmarks/rust/regex-redux/build_in_tmp.sh
     command: sleep infinity
 
 flow:
   - name: Rust-Regex-Redux
     container: rust-container
     commands:
-      - type: console
-        command: sh /tmp/repo/benchmarks/rust/regex-redux/build_in_tmp.sh
       - type: console
         shell: sh
         command: /tmp/rust-regex-redux < /tmp/repo/inputs/fasta-100.txt

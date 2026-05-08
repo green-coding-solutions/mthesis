@@ -9,14 +9,13 @@ services:
     setup-commands:
       - shell: sh
         command: mkdir -p /tmp/java-libs && if [ ! -f /tmp/java-libs/fastutil-8.3.1.jar ]; then if command -v curl >/dev/null 2>&1; then curl -fsSL -o /tmp/java-libs/fastutil-8.3.1.jar https://repo1.maven.org/maven2/it/unimi/dsi/fastutil/8.3.1/fastutil-8.3.1.jar; elif command -v wget >/dev/null 2>&1; then wget -q -O /tmp/java-libs/fastutil-8.3.1.jar https://repo1.maven.org/maven2/it/unimi/dsi/fastutil/8.3.1/fastutil-8.3.1.jar; else echo 'Neither curl nor wget is available to download fastutil jar.' >&2; exit 1; fi; fi
+      - command: sh /tmp/repo/benchmarks/java/k-nucleotide/build_in_tmp.sh
     command: ["sleep infinity"]
 
 flow:
   - name: Java-K-Nucleotide
     container: java-container
     commands:
-      - type: console
-        command: sh /tmp/repo/benchmarks/java/k-nucleotide/build_in_tmp.sh
       - type: console
         shell: sh
         command: /tmp/java-build/k-nucleotide/knucleotide.graalvmaot_run 0 < /tmp/repo/inputs/fasta-2500000.txt

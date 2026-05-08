@@ -5,14 +5,14 @@ description: Swift benchmarks using Swift 6.0.3 (runs on container architecture,
 services:
   swift-container:
     image: swift:6.0.3
+    setup-commands:
+      - command: swiftc /tmp/repo/benchmarks/swift/n-body/main.swift -Ounchecked -wmo -o /tmp/nbody.swift-3.swift_run
     command: sleep infinity
 
 flow:
   - name: Swift-N-Body
     container: swift-container
     commands:
-      - type: console
-        command: swiftc /tmp/repo/benchmarks/swift/n-body/main.swift -Ounchecked -wmo -o /tmp/nbody.swift-3.swift_run
       - type: console
         command: /tmp/nbody.swift-3.swift_run 50000000
 

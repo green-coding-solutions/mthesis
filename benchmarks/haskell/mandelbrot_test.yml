@@ -8,14 +8,13 @@ services:
     setup-commands:
       - shell: bash
         command: apt-get update && for version in 15 14 13; do if apt-cache show "llvm-${version}" "clang-${version}" >/dev/null 2>&1; then apt-get install -y --no-install-recommends "llvm-${version}" "clang-${version}" libpcre2-dev && ln -sf "/usr/bin/opt-${version}" /usr/local/bin/opt && ln -sf "/usr/bin/llc-${version}" /usr/local/bin/llc && ln -sf "/usr/bin/clang-${version}" /usr/local/bin/clang && break; fi; done && test -x /usr/local/bin/opt && test -x /usr/local/bin/llc && test -x /usr/local/bin/clang && rm -rf /var/lib/apt/lists/*
+      - shell: sh
+        command: mkdir -p /tmp/haskell-mandelbrot && ghc -fllvm -O2 -XBangPatterns -threaded -rtsopts -XMagicHash -XUnboxedTuples /tmp/repo/benchmarks/haskell/mandelbrot/main.hs -outputdir /tmp/haskell-mandelbrot -odir /tmp/haskell-mandelbrot -hidir /tmp/haskell-mandelbrot -o /tmp/haskell-mandelbrot/main
     command: sleep infinity
 
 flow:
   - name: Haskell-Mandelbrot
     container: haskell-container
     commands:
-      - type: console
-        shell: sh
-        command: mkdir -p /tmp/haskell-mandelbrot && ghc -fllvm -O2 -XBangPatterns -threaded -rtsopts -XMagicHash -XUnboxedTuples /tmp/repo/benchmarks/haskell/mandelbrot/main.hs -outputdir /tmp/haskell-mandelbrot -odir /tmp/haskell-mandelbrot -hidir /tmp/haskell-mandelbrot -o /tmp/haskell-mandelbrot/main
       - type: console
         command: /tmp/haskell-mandelbrot/main +RTS -N4 -RTS 160

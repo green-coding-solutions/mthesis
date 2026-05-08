@@ -5,14 +5,14 @@ description: Go benchmarks using Golang 1.25 Alpine
 services:
   go-container:
     image: golang:1.25-alpine
+    setup-commands:
+      - command: go build -o /tmp/go-n-body /tmp/repo/benchmarks/go/n-body/main.go
     command: sleep infinity
 
 flow:
   - name: Go-N-Body
     container: go-container
     commands:
-      - type: console
-        command: go build -o /tmp/go-n-body /tmp/repo/benchmarks/go/n-body/main.go
       - type: console
         command: /tmp/go-n-body 500
 

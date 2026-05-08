@@ -8,14 +8,13 @@ services:
     setup-commands:
       - shell: sh
         command: opam update && opam install -y ocamlfind re
+      - command: sh /tmp/repo/benchmarks/ocaml/spectral-norm/build_in_tmp.sh
     command: sleep infinity
 
 flow:
   - name: OCaml-Spectral-Norm
     container: ocaml-container
     commands:
-      - type: console
-        command: sh /tmp/repo/benchmarks/ocaml/spectral-norm/build_in_tmp.sh
       - type: console
         command: /tmp/ocaml-spectral-norm 5500
 

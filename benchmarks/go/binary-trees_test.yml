@@ -5,14 +5,14 @@ description: Go benchmarks using Golang 1.25 Alpine
 services:
   go-container:
     image: golang:1.25-alpine
+    setup-commands:
+      - command: go build -o /tmp/go-binary-trees /tmp/repo/benchmarks/go/binary-trees/main.go
     command: sleep infinity
 
 flow:
   - name: Go-Binary-Trees
     container: go-container
     commands:
-      - type: console
-        command: go build -o /tmp/go-binary-trees /tmp/repo/benchmarks/go/binary-trees/main.go
       - type: console
         command: /tmp/go-binary-trees 6
 

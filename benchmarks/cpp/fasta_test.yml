@@ -8,13 +8,12 @@ services:
     setup-commands:
       - shell: bash
         command: apt-get update && apt-get install -y --fix-missing libboost-dev && rm -rf /var/lib/apt/lists/*
+      - command: g++ -pipe -O3 -fomit-frame-pointer -march=native -std=c++20 /tmp/repo/benchmarks/cpp/fasta/main.cpp -o /tmp/main
     command: sleep infinity
 
 flow:
   - name: CPP-Fasta
     container: cpp-container
     commands:
-      - type: console
-        command: g++ -pipe -O3 -fomit-frame-pointer -march=native -std=c++20 /tmp/repo/benchmarks/cpp/fasta/main.cpp -o /tmp/main
       - type: console
         command: /tmp/main 100

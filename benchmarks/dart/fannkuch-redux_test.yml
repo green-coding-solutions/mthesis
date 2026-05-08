@@ -5,14 +5,14 @@ description: Dart benchmarks using Dart SDK 3.9.4
 services:
   dart-container:
     image: dart:3.9.4-sdk
+    setup-commands:
+      - command: dart compile exe /tmp/repo/benchmarks/dart/fannkuch-redux/main.dart -o /tmp/main
     command: sleep infinity
 
 flow:
   - name: Dart-Fannkuch-Redux
     container: dart-container
     commands:
-      - type: console
-        command: dart compile exe /tmp/repo/benchmarks/dart/fannkuch-redux/main.dart -o /tmp/main
       - type: console
         command: /tmp/main 6
 

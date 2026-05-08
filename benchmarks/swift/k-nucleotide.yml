@@ -5,14 +5,14 @@ description: Swift benchmarks using Swift 6.0.3 (runs on container architecture,
 services:
   swift-container:
     image: swift:6.0.3
+    setup-commands:
+      - command: swiftc /tmp/repo/benchmarks/swift/k-nucleotide/main.swift -Ounchecked -wmo -o /tmp/swift-k-nucleotide
     command: sleep infinity
 
 flow:
   - name: Swift-K-Nucleotide
     container: swift-container
     commands:
-      - type: console
-        command: swiftc /tmp/repo/benchmarks/swift/k-nucleotide/main.swift -Ounchecked -wmo -o /tmp/swift-k-nucleotide
       - type: console
         shell: sh
         command: /tmp/swift-k-nucleotide 0 < /tmp/repo/inputs/fasta-2500000.txt

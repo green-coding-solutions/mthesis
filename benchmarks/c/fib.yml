@@ -5,13 +5,13 @@ description: Fibonacci Benchmark in C
 services:
   c-container:
     image: gcc:15.2.0
+    setup-commands:
+      - command: gcc -pipe -Wall -O3 -fomit-frame-pointer -march=native -fopenmp /tmp/repo/benchmarks/c/fibonacci/main.c -o /tmp/main
     command: sleep infinity
 
 flow:
   - name: C-Fibonacci
     container: c-container
     commands:
-      - type: console
-        command: gcc -pipe -Wall -O3 -fomit-frame-pointer -march=native -fopenmp /tmp/repo/benchmarks/c/fibonacci/main.c -o /tmp/main
       - type: console
         command: /tmp/main

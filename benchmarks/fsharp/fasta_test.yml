@@ -5,13 +5,13 @@ description: FSharp benchmarks using .NET SDK 9.0
 services:
   fsharp-container:
     image: mcr.microsoft.com/dotnet/sdk:9.0
+    setup-commands:
+      - command: sh /tmp/repo/benchmarks/fsharp/fasta/build_in_tmp.sh
     command: sleep infinity
 
 flow:
   - name: FSharp-Fasta
     container: fsharp-container
     commands:
-      - type: console
-        command: sh /tmp/repo/benchmarks/fsharp/fasta/build_in_tmp.sh
       - type: console
         command: /tmp/fsharp-fasta 100
