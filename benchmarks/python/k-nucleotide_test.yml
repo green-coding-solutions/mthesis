@@ -1,10 +1,10 @@
 name: Python Benchmark (K-Nucleotide)
 author: André Brandão <https://github.com/brandao07>
-description: Python benchmarks using Python 3.14 Alpine
+description: Python benchmarks using Python 3.13 Alpine
 
 services:
   python-container:
-    image: python:3.14.0-alpine3.22
+    image: python:3.13-alpine3.22
     command: sleep infinity
 
 flow:
