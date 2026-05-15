@@ -159,7 +159,7 @@
 - [binary-trees](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/binarytrees-python3-4.html)
 - [fannkuch-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fannkuchredux-python3-4.html)
 - [fasta](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fasta-python3-5.html)
-- [k-nucleotide](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-python3-3.html)
+- [k-nucleotide](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-python3-9.html)
 - [mandelbrot](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-python3-7.html)
 - [n-body](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/nbody-python3-1.html)
 - [regex-redux](https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-python3-1.html)
