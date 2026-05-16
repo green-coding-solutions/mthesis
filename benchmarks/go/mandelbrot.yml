@@ -5,13 +5,13 @@ description: Go benchmarks using Golang 1.25 Alpine
 services:
   go-container:
     image: golang:1.25-alpine
+    setup-commands:
+      - command: go build -o /tmp/go-mandelbrot /tmp/repo/benchmarks/go/mandelbrot/main.go
     command: sleep infinity
 
 flow:
   - name: Go-Mandelbrot
     container: go-container
     commands:
-      - type: console
-        command: sh -c "go build -o /tmp/go-mandelbrot /tmp/repo/benchmarks/go/mandelbrot/main.go"
       - type: console
         command: /tmp/go-mandelbrot 16000

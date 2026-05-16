@@ -6,14 +6,15 @@ services:
   haskell-container:
     image: haskell:9.10.1
     setup-commands:
-      - command: bash -c "cabal update && cabal install --lib massiv"
+      - shell: bash
+        command: cabal update && cabal install --lib massiv
+      - shell: sh
+        command: mkdir -p /tmp/haskell-fasta && ghc -O2 -XBangPatterns -threaded -rtsopts -XMagicHash  /tmp/repo/benchmarks/haskell/fasta/main.hs -outputdir /tmp/haskell-fasta -odir /tmp/haskell-fasta -hidir /tmp/haskell-fasta -o /tmp/haskell-fasta/main
     command: sleep infinity
 
 flow:
   - name: Haskell-Fasta
     container: haskell-container
     commands:
-      - type: console
-        command: sh -c "mkdir -p /tmp/haskell-fasta && ghc -O2 -XBangPatterns -threaded -rtsopts -XMagicHash  /tmp/repo/benchmarks/haskell/fasta/main.hs -outputdir /tmp/haskell-fasta -odir /tmp/haskell-fasta -hidir /tmp/haskell-fasta -o /tmp/haskell-fasta/main"
       - type: console
         command: /tmp/haskell-fasta/main +RTS -N4 -RTS 100

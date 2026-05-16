@@ -7,6 +7,7 @@ services:
     image: mcr.microsoft.com/dotnet/sdk:9.0
     setup-commands:
       - command: sh /tmp/repo/benchmarks/csharp/setup_dependencies.sh
+      - command: sh /tmp/repo/benchmarks/csharp/regex-redux/build_in_tmp.sh
     command: sleep infinity
 
 flow:
@@ -14,6 +15,5 @@ flow:
     container: csharp-container
     commands:
       - type: console
-        command: sh /tmp/repo/benchmarks/csharp/regex-redux/build_in_tmp.sh
-      - type: console
-        command: sh -c "/tmp/csharp-regex-redux 0 < /tmp/repo/inputs/fasta-5000000.txt"
+        shell: sh
+        command: /tmp/csharp-regex-redux 0 < /tmp/repo/inputs/fasta-5000000.txt

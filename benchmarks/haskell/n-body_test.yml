@@ -6,15 +6,16 @@ services:
   haskell-container:
     image: haskell:9.10.1
     setup-commands:
-      - command: bash -c "apt-get update && apt-get install -y --no-install-recommends libpcre2-dev && rm -rf /var/lib/apt/lists/*"
+      - shell: bash
+        command: apt-get update && apt-get install -y --no-install-recommends libpcre2-dev && rm -rf /var/lib/apt/lists/*
+      - shell: sh
+        command: mkdir -p /tmp/haskell-n-body && ghc -O2 -XBangPatterns -threaded -rtsopts -XMagicHash /tmp/repo/benchmarks/haskell/n-body/main.hs -outputdir /tmp/haskell-n-body -odir /tmp/haskell-n-body -hidir /tmp/haskell-n-body -o /tmp/haskell-n-body/main
     command: sleep infinity
 
 flow:
   - name: Haskell-N-Body
     container: haskell-container
     commands:
-      - type: console
-        command: sh -c "mkdir -p /tmp/haskell-n-body && ghc -O2 -XBangPatterns -threaded -rtsopts -XMagicHash /tmp/repo/benchmarks/haskell/n-body/main.hs -outputdir /tmp/haskell-n-body -odir /tmp/haskell-n-body -hidir /tmp/haskell-n-body -o /tmp/haskell-n-body/main"
       - type: console
         command: /tmp/haskell-n-body/main +RTS -N4 -RTS 500
 

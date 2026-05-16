@@ -5,14 +5,14 @@ description: Java benchmarks using GraalVM Native Image 23.0.2
 services:
   java-container:
     image: ghcr.io/graalvm/native-image-community:23.0.2
-    entrypoint: /bin/sh
-    command: -c "sleep infinity"
+    entrypoint: ["/bin/sh", "-c"]
+    setup-commands:
+      - command: sh /tmp/repo/benchmarks/java/mandelbrot/build_in_tmp.sh
+    command: ["sleep infinity"]
 
 flow:
   - name: Java-Mandelbrot
     container: java-container
     commands:
-      - type: console
-        command: sh /tmp/repo/benchmarks/java/mandelbrot/build_in_tmp.sh
       - type: console
         command: /tmp/java-build/mandelbrot/mandelbrot.graalvmaot-6.graalvmaot_run 16000

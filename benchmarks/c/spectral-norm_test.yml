@@ -5,6 +5,8 @@ description: C benchmarks using GCC 15.2.0
 services:
   c-container:
     image: gcc:15.2.0
+    setup-commands:
+      - command: gcc -pipe -Wall -O3 -fomit-frame-pointer -march=native -fopenmp /tmp/repo/benchmarks/c/spectral-norm/main.c -o /tmp/main -lm
     command: sleep infinity
 
 flow:
@@ -12,7 +14,4 @@ flow:
     container: c-container
     commands:
       - type: console
-        command: gcc -pipe -Wall -O3 -fomit-frame-pointer -march=native -fopenmp /tmp/repo/benchmarks/c/spectral-norm/main.c -o /tmp/main -lm
-      - type: console
         command: /tmp/main 500
-

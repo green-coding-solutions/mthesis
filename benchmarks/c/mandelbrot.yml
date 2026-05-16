@@ -5,13 +5,13 @@ description: C benchmarks using GCC 15.2.0
 services:
   c-container:
     image: gcc:15.2.0
+    setup-commands:
+      - command: gcc -O3 -march=native -fopenmp /tmp/repo/benchmarks/c/mandelbrot/main.c -o /tmp/main
     command: sleep infinity
 
 flow:
   - name: C-Mandelbrot
     container: c-container
     commands:
-      - type: console
-        command: gcc -O3 -march=native -fopenmp /tmp/repo/benchmarks/c/mandelbrot/main.c -o /tmp/main
       - type: console
         command: /tmp/main 16000

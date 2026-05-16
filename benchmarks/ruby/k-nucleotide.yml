@@ -5,6 +5,8 @@ description: Ruby benchmarks using Ruby 3.4 with YJIT
 services:
   ruby-container:
     image: ruby:3.4
+    setup-commands:
+      - command: sh /tmp/repo/benchmarks/ruby/k-nucleotide/build_in_tmp.sh
     command: sleep infinity
 
 flow:
@@ -12,8 +14,7 @@ flow:
     container: ruby-container
     commands:
       - type: console
-        command: sh /tmp/repo/benchmarks/ruby/k-nucleotide/build_in_tmp.sh
-      - type: console
-        command: sh -c "/tmp/ruby-k-nucleotide < /tmp/repo/inputs/fasta-2500000.txt"
+        shell: sh
+        command: /tmp/ruby-k-nucleotide < /tmp/repo/inputs/fasta-2500000.txt
 
 

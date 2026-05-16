@@ -6,15 +6,15 @@ services:
   ocaml-container:
     image: ocaml/opam:ubuntu-24.04-ocaml-5.4
     setup-commands:
-      - command: sh -lc "opam update && opam install -y ocamlfind re"
+      - shell: sh
+        command: opam update && opam install -y ocamlfind re
+      - command: sh /tmp/repo/benchmarks/ocaml/n-body/build_in_tmp.sh
     command: sleep infinity
 
 flow:
   - name: OCaml-N-Body
     container: ocaml-container
     commands:
-      - type: console
-        command: sh /tmp/repo/benchmarks/ocaml/n-body/build_in_tmp.sh
       - type: console
         command: /tmp/ocaml-n-body 50000000
 

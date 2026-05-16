@@ -5,13 +5,13 @@ description: Go benchmarks using Golang 1.25 Alpine
 services:
   go-container:
     image: golang:1.25-alpine
+    setup-commands:
+      - command: go build -o /tmp/go-fasta /tmp/repo/benchmarks/go/fasta/main.go
     command: sleep infinity
 
 flow:
   - name: Go-Fasta
     container: go-container
     commands:
-      - type: console
-        command: sh -c "go build -o /tmp/go-fasta /tmp/repo/benchmarks/go/fasta/main.go"
       - type: console
         command: /tmp/go-fasta 25000000

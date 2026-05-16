@@ -6,16 +6,17 @@ services:
   rust-container:
     image: rust:1.93-alpine
     setup-commands:
-      - command: sh -lc "apk add --no-cache rust cargo"
-      - command: sh -lc "mkdir -p /tmp/rust-prefetch/binary-trees && cp /tmp/repo/benchmarks/rust/binary-trees/Cargo.toml /tmp/rust-prefetch/binary-trees/Cargo.toml && CARGO_HOME=/tmp/cargo-home cargo generate-lockfile --manifest-path /tmp/rust-prefetch/binary-trees/Cargo.toml && CARGO_HOME=/tmp/cargo-home cargo fetch --locked --manifest-path /tmp/rust-prefetch/binary-trees/Cargo.toml"
+      - shell: sh
+        command: apk add --no-cache rust cargo
+      - shell: sh
+        command: mkdir -p /tmp/rust-prefetch/binary-trees && cp /tmp/repo/benchmarks/rust/binary-trees/Cargo.toml /tmp/rust-prefetch/binary-trees/Cargo.toml && CARGO_HOME=/tmp/cargo-home cargo generate-lockfile --manifest-path /tmp/rust-prefetch/binary-trees/Cargo.toml && CARGO_HOME=/tmp/cargo-home cargo fetch --locked --manifest-path /tmp/rust-prefetch/binary-trees/Cargo.toml
+      - command: sh /tmp/repo/benchmarks/rust/binary-trees/build_in_tmp.sh
     command: sleep infinity
 
 flow:
   - name: Rust-Binary-Trees
     container: rust-container
     commands:
-      - type: console
-        command: sh /tmp/repo/benchmarks/rust/binary-trees/build_in_tmp.sh
       - type: console
         command: /tmp/cargo-target/binary-trees/release/binary-trees 6
 

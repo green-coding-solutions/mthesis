@@ -5,13 +5,13 @@ description: Erlang benchmarks using Erlang OTP 29.0.0
 services:
   erlang-container:
     image: erlang:29.0.0
+    setup-commands:
+      - command: erlc /tmp/repo/benchmarks/erlang/spectral-norm/spectralnorm.erl
     command: sleep infinity
 
 flow:
   - name: Erlang-Spectral-Norm
     container: erlang-container
     commands:
-      - type: console
-        command: erlc /tmp/repo/benchmarks/erlang/spectral-norm/spectralnorm.erl
       - type: console
         command: erl -pa /tmp/repo/benchmarks/erlang/spectral-norm -noshell -smp enable -run spectralnorm main 500

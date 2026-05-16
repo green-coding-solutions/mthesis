@@ -5,13 +5,13 @@ description: Lua benchmarks using Lua 5.5 + LuaRocks Alpine 3.22
 services:
   lua-container:
     image: nickblah/lua:5.5-luarocks-alpine3.22
+    setup-commands:
+      - command: sh /tmp/repo/benchmarks/lua/mandelbrot/build_in_tmp.sh
     command: sleep infinity
 
 flow:
   - name: Lua-Mandelbrot
     container: lua-container
     commands:
-      - type: console
-        command: sh /tmp/repo/benchmarks/lua/mandelbrot/build_in_tmp.sh
       - type: console
         command: lua /tmp/lua-build/mandelbrot/mandelbrot.lua-6.lua_run 16000

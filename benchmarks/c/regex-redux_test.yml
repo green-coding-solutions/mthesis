@@ -5,6 +5,8 @@ description: C benchmarks using GCC 15.2.0
 services:
   c-container:
     image: gcc:15.2.0
+    setup-commands:
+      - command: gcc -pipe -Wall -O3 -fomit-frame-pointer -march=native -fopenmp /tmp/repo/benchmarks/c/regex-redux/main.c -o /tmp/main -lpcre2-8
     command: sleep infinity
 
 flow:
@@ -12,8 +14,6 @@ flow:
     container: c-container
     commands:
       - type: console
-        command: gcc -pipe -Wall -O3 -fomit-frame-pointer -march=native -fopenmp /tmp/repo/benchmarks/c/regex-redux/main.c -o /tmp/main -lpcre2-8
-      - type: console
-        command: sh -c "/tmp/main < /tmp/repo/inputs/fasta-100.txt"
-
+        shell: sh
+        command: /tmp/main < /tmp/repo/inputs/fasta-100.txt
 

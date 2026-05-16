@@ -6,7 +6,9 @@ services:
   php-container:
     image: php:8.4-cli
     setup-commands:
-      - command: sh -lc "docker-php-ext-install -j\"$(nproc)\" shmop pcntl && docker-php-ext-enable shmop pcntl"
+      - shell: sh
+        command: docker-php-ext-install -j"$(nproc)" shmop pcntl && docker-php-ext-enable shmop pcntl
+      - command: sh /tmp/repo/benchmarks/php/fasta/build_in_tmp.sh
     command: sleep infinity
 
 
@@ -14,7 +16,5 @@ flow:
   - name: PHP-Fasta
     container: php-container
     commands:
-      - type: console
-        command: sh /tmp/repo/benchmarks/php/fasta/build_in_tmp.sh
       - type: console
         command: /tmp/php-fasta 25000000

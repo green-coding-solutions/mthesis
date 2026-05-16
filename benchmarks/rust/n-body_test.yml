@@ -6,15 +6,15 @@ services:
   rust-container:
     image: rust:1.93-alpine
     setup-commands:
-      - command: sh -lc "apk add --no-cache rust cargo"
+      - shell: sh
+        command: apk add --no-cache rust cargo
+      - command: sh /tmp/repo/benchmarks/rust/n-body/build_in_tmp.sh
     command: sleep infinity
 
 flow:
   - name: Rust-N-Body
     container: rust-container
     commands:
-      - type: console
-        command: sh /tmp/repo/benchmarks/rust/n-body/build_in_tmp.sh
       - type: console
         command: /tmp/rust-n-body 500
 

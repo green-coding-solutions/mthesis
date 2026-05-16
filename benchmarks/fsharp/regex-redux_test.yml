@@ -7,6 +7,7 @@ services:
     image: mcr.microsoft.com/dotnet/sdk:9.0
     setup-commands:
       - command: sh /tmp/repo/benchmarks/fsharp/setup_dependencies.sh
+      - command: sh /tmp/repo/benchmarks/fsharp/regex-redux/build_in_tmp.sh
     command: sleep infinity
 
 flow:
@@ -14,7 +15,6 @@ flow:
     container: fsharp-container
     commands:
       - type: console
-        command: sh /tmp/repo/benchmarks/fsharp/regex-redux/build_in_tmp.sh
-      - type: console
-        command: sh -c "/tmp/fsharp-regex-redux 0 < /tmp/repo/inputs/fasta-100.txt"
+        shell: sh
+        command: /tmp/fsharp-regex-redux 0 < /tmp/repo/inputs/fasta-100.txt
 

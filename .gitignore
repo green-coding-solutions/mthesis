@@ -13,3 +13,4 @@ inputs/fasta-5000000.txt
 green-metrics-tool
 /green-metrics-tool/
 /logs/
+./setup.log

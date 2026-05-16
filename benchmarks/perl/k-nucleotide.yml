@@ -12,6 +12,7 @@ flow:
     container: perl-container
     commands:
       - type: console
-        command: sh -c "perl /tmp/repo/benchmarks/perl/k-nucleotide/main.pl 0 < /tmp/repo/inputs/fasta-2500000.txt"
+        shell: sh
+        command: perl /tmp/repo/benchmarks/perl/k-nucleotide/main.pl 0 < /tmp/repo/inputs/fasta-2500000.txt
 
 

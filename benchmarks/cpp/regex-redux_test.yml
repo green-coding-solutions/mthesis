@@ -6,7 +6,9 @@ services:
   cpp-container:
     image: gcc:15.2.0
     setup-commands:
-      - command: bash -c "apt-get update && apt-get install -y --fix-missing libboost-dev && rm -rf /var/lib/apt/lists/*"
+      - shell: bash
+        command: apt-get update && apt-get install -y --fix-missing libboost-dev && rm -rf /var/lib/apt/lists/*
+      - command: g++ -pipe -Wall -O3 -fomit-frame-pointer -march=native /tmp/repo/benchmarks/cpp/regex-redux/main.cpp -o /tmp/main -lpcre2-8
     command: sleep infinity
 
 flow:
@@ -14,8 +16,7 @@ flow:
     container: cpp-container
     commands:
       - type: console
-        command: g++ -pipe -Wall -O3 -fomit-frame-pointer -march=native /tmp/repo/benchmarks/cpp/regex-redux/main.cpp -o /tmp/main -lpcre2-8
-      - type: console
-        command: sh -c "/tmp/main < /tmp/repo/inputs/fasta-100.txt"
+        shell: sh
+        command: /tmp/main < /tmp/repo/inputs/fasta-100.txt
 
 
