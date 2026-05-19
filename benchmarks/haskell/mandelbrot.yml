@@ -17,4 +17,4 @@ flow:
     container: haskell-container
     commands:
       - type: console
-        command: /tmp/haskell-mandelbrot/main +RTS -N4 -RTS 160
+        command: /tmp/haskell-mandelbrot/main +RTS -N4 -RTS 16000
