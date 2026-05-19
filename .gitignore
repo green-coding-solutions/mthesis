@@ -16,3 +16,6 @@ green-metrics-tool
 ./setup.log
 .claude/
 .venv/
+/results/figs/
+/results/results_clean.csv
+/results/results_clean_runs.csv
