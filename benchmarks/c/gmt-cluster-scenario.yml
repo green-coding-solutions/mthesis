@@ -1,0 +1,74 @@
+name: C Benchmark (All - Cluster Scenario)
+author: André Brandão <https://github.com/brandao07>
+description: C benchmarks using GCC 15.2.0 — all 8 benchmarks combined
+
+services:
+  c-container:
+    image: gcc:15.2.0
+    setup-commands:
+      - command: gcc -pipe -Wall -O3 -fomit-frame-pointer -march=native -fopenmp /tmp/repo/benchmarks/c/binary-trees/main.c -o /tmp/binary-trees
+      - command: gcc -pipe -Wall -O3 -fomit-frame-pointer -march=native -fopenmp /tmp/repo/benchmarks/c/fannkuch-redux/main.c -o /tmp/fannkuch-redux
+      - command: gcc -pipe -Wall -O3 -fomit-frame-pointer -march=native /tmp/repo/benchmarks/c/fasta/main.c -o /tmp/fasta
+      - command: gcc -pipe -Wall -O3 -fomit-frame-pointer -march=native -fopenmp /tmp/repo/benchmarks/c/k-nucleotide/main.c -o /tmp/k-nucleotide
+      - command: gcc -O3 -march=native -fopenmp /tmp/repo/benchmarks/c/mandelbrot/main.c -o /tmp/mandelbrot
+      - command: gcc -pipe -Wall -O3 -fomit-frame-pointer -march=native /tmp/repo/benchmarks/c/n-body/main.c -o /tmp/n-body
+      - command: gcc -pipe -Wall -O3 -fomit-frame-pointer -march=native -fopenmp /tmp/repo/benchmarks/c/regex-redux/main.c -o /tmp/regex-redux -lpcre2-8
+      - command: gcc -pipe -Wall -O3 -fomit-frame-pointer -march=native -fopenmp /tmp/repo/benchmarks/c/spectral-norm/main.c -o /tmp/spectral-norm -lm
+    command: sleep infinity
+
+flow:
+  - name: C-Binary-Trees
+    container: c-container
+    commands:
+      - type: console
+        shell: sh
+        command: /tmp/binary-trees 21 > /dev/null
+
+  - name: C-Fannkuch-Redux
+    container: c-container
+    commands:
+      - type: console
+        shell: sh
+        command: /tmp/fannkuch-redux 12 > /dev/null
+
+  - name: C-Fasta
+    container: c-container
+    commands:
+      - type: console
+        shell: sh
+        command: /tmp/fasta 25000000 > /dev/null
+
+  - name: C-K-Nucleotide
+    container: c-container
+    commands:
+      - type: console
+        shell: sh
+        command: /tmp/k-nucleotide < /tmp/repo/inputs/fasta-2500000.txt > /dev/null
+
+  - name: C-Mandelbrot
+    container: c-container
+    commands:
+      - type: console
+        shell: sh
+        command: /tmp/mandelbrot 16000 > /dev/null
+
+  - name: C-N-Body
+    container: c-container
+    commands:
+      - type: console
+        shell: sh
+        command: /tmp/n-body 50000000 > /dev/null
+
+  - name: C-Regex-Redux
+    container: c-container
+    commands:
+      - type: console
+        shell: sh
+        command: /tmp/regex-redux < /tmp/repo/inputs/fasta-5000000.txt > /dev/null
+
+  - name: C-Spectral-Norm
+    container: c-container
+    commands:
+      - type: console
+        shell: sh
+        command: /tmp/spectral-norm 5500 > /dev/null

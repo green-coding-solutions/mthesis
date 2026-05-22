@@ -1,0 +1,65 @@
+name: Python Benchmark (All - Cluster Scenario)
+author: André Brandão <https://github.com/brandao07>
+description: Python benchmarks using Python 3.13 Alpine — all 8 benchmarks combined
+
+services:
+  python-container:
+    image: python:3.13-alpine3.22
+    command: sleep infinity
+
+flow:
+  - name: Python-Binary-Trees
+    container: python-container
+    commands:
+      - type: console
+        shell: sh
+        command: python3 -OO /tmp/repo/benchmarks/python/binary-trees/main.py 21 > /dev/null
+
+  - name: Python-Fannkuch-Redux
+    container: python-container
+    commands:
+      - type: console
+        shell: sh
+        command: python3 -OO /tmp/repo/benchmarks/python/fannkuch-redux/main.py 12 > /dev/null
+
+  - name: Python-Fasta
+    container: python-container
+    commands:
+      - type: console
+        shell: sh
+        command: python3 -OO /tmp/repo/benchmarks/python/fasta/main.py 25000000 > /dev/null
+
+  - name: Python-K-Nucleotide
+    container: python-container
+    commands:
+      - type: console
+        shell: sh
+        command: python3 -OO /tmp/repo/benchmarks/python/k-nucleotide/main.py 0 < /tmp/repo/inputs/fasta-2500000.txt > /dev/null
+
+  - name: Python-Mandelbrot
+    container: python-container
+    commands:
+      - type: console
+        shell: sh
+        command: python3 -OO /tmp/repo/benchmarks/python/mandelbrot/main.py 16000 > /dev/null
+
+  - name: Python-N-Body
+    container: python-container
+    commands:
+      - type: console
+        shell: sh
+        command: python3 -OO /tmp/repo/benchmarks/python/n-body/main.py 50000000 > /dev/null
+
+  - name: Python-Regex-Redux
+    container: python-container
+    commands:
+      - type: console
+        shell: sh
+        command: python3 -OO /tmp/repo/benchmarks/python/regex-redux/main.py 0 < /tmp/repo/inputs/fasta-5000000.txt > /dev/null
+
+  - name: Python-Spectral-Norm
+    container: python-container
+    commands:
+      - type: console
+        shell: sh
+        command: python3 -OO /tmp/repo/benchmarks/python/spectral-norm/main.py 5500 > /dev/null
