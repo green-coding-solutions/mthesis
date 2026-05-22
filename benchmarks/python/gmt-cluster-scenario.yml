@@ -55,7 +55,7 @@ flow:
     commands:
       - type: console
         shell: sh
-        command: python3 -OO /tmp/repo/benchmarks/python/regex-redux/main.py 0 < /tmp/repo/inputs/fasta-5000000.txt > /dev/null
+        command: python3 -OO /tmp/repo/benchmarks/python/regex-redux/main.py 0 < /tmp/repo/inputs/fasta-2500000.txt > /dev/null
 
   - name: Python-Spectral-Norm
     container: python-container

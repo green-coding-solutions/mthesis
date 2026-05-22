@@ -64,7 +64,7 @@ flow:
     commands:
       - type: console
         shell: sh
-        command: /tmp/regex-redux < /tmp/repo/inputs/fasta-5000000.txt > /dev/null
+        command: /tmp/regex-redux < /tmp/repo/inputs/fasta-2500000.txt > /dev/null
 
   - name: C-Spectral-Norm
     container: c-container
