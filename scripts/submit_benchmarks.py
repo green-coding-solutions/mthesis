@@ -14,12 +14,13 @@ Configurable via CLI flags: --machine-id, --token, --repo-url, --branch,
 from __future__ import annotations
 
 import argparse
+import re
 import subprocess
 import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 DEFAULT_REPO_URL = "https://github.com/green-coding-solutions/mthesis.git"
 DEFAULT_TOKEN = "xxx"
@@ -31,7 +32,13 @@ DEFAULT_SUBMIT_SCRIPT = Path("/Users/didi/code/gmt-helpers/api/submit_software.p
 REPO_ROOT = Path(__file__).resolve().parent.parent
 BENCHMARKS_DIR = REPO_ROOT / "benchmarks"
 
-SLEEP_SECONDS = 10
+SLEEP_SECONDS = 60
+RATE_LIMIT_BACKOFF_SECONDS = 300  # 5 minutes
+DEFAULT_MAX_RETRIES = 5
+
+# GMT wraps the upstream GitHub failure as "Repository returned bad status code (403)".
+# Treat that pattern (or any non-2xx bad status code) as a transient GitHub rate-limit hit.
+RATE_LIMIT_PATTERN = re.compile(r"bad status code \(\d{3}\)", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -106,22 +113,28 @@ def build_submit_command(
     return cmd
 
 
-def submit_one(cmd: List[str], dry_run: bool, progress: str = "") -> int:
+def submit_one(cmd: List[str], dry_run: bool, progress: str = "") -> Tuple[int, str]:
     """
     Run one submit_software.py invocation.
 
-    Streams stdout/stderr through to this process. Returns the child's exit code,
-    or 0 in dry-run mode (no process is launched). `progress` is a "[n/x]" tag
-    prepended to log lines so the caller can show overall progress.
+    Captures stdout/stderr, replays them on this process's streams, and returns
+    (exit_code, combined_output). In dry-run mode no process is launched and
+    (0, "") is returned. `progress` is a "[n/x]" tag prepended to log lines.
     """
     printable = " ".join(_shquote(a) for a in cmd)
     tag = f"{progress} " if progress else ""
     if dry_run:
         print(f"{tag}[dry-run] {printable}")
-        return 0
+        return 0, ""
     print(f"{tag}[submit]  {printable}")
-    result = subprocess.run(cmd, check=False)
-    return result.returncode
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    if result.stdout:
+        sys.stdout.write(result.stdout)
+        sys.stdout.flush()
+    if result.stderr:
+        sys.stderr.write(result.stderr)
+        sys.stderr.flush()
+    return result.returncode, (result.stdout or "") + (result.stderr or "")
 
 
 def _shquote(s: str) -> str:
@@ -163,6 +176,12 @@ def parse_args(argv: List[str] | None = None) -> argparse.Namespace:
                    help="Limit to one or more languages (repeatable).")
     p.add_argument("--sleep", type=float, default=SLEEP_SECONDS,
                    help=f"Seconds to wait between submissions (default {SLEEP_SECONDS}).")
+    p.add_argument("--rate-limit-backoff", type=float, default=RATE_LIMIT_BACKOFF_SECONDS,
+                   help=f"Seconds to wait after a GitHub rate-limit error before retrying "
+                        f"(default {RATE_LIMIT_BACKOFF_SECONDS}).")
+    p.add_argument("--max-retries", type=int, default=DEFAULT_MAX_RETRIES,
+                   help=f"Maximum number of retries per submission when a rate-limit error "
+                        f"is detected (default {DEFAULT_MAX_RETRIES}).")
     p.add_argument("--dry-run", action="store_true",
                    help="Print the commands that would be run without executing them.")
     return p.parse_args(argv)
@@ -196,6 +215,7 @@ def main(argv: List[str] | None = None) -> int:
     print()
 
     total = len(scenarios)
+    max_attempts = max(1, args.max_retries + 1)
     for idx, scenario in enumerate(scenarios):
         progress = f"[{idx + 1}/{total}]"
         if idx > 0 and not args.dry_run:
@@ -215,10 +235,25 @@ def main(argv: List[str] | None = None) -> int:
             filename=str(scenario.rel_path),
             email=args.email,
         )
-        rc = submit_one(cmd, dry_run=args.dry_run, progress=progress)
-        if rc != 0:
+
+        for attempt in range(1, max_attempts + 1):
+            attempt_tag = progress if attempt == 1 else f"{progress} (retry {attempt - 1}/{args.max_retries})"
+            rc, output = submit_one(cmd, dry_run=args.dry_run, progress=attempt_tag)
+            if rc == 0:
+                break
+            rate_limited = bool(RATE_LIMIT_PATTERN.search(output))
+            if rate_limited and attempt < max_attempts and not args.dry_run:
+                print(
+                    f"{progress} [rate-limit] GitHub rate-limit detected for {run_name}; "
+                    f"sleeping {args.rate_limit_backoff:.0f}s before retry "
+                    f"{attempt}/{args.max_retries}...",
+                    file=sys.stderr,
+                )
+                time.sleep(args.rate_limit_backoff)
+                continue
+            reason = "rate-limit retries exhausted" if rate_limited else f"exit {rc}"
             print(
-                f"{progress} [error]   submission failed for {run_name} (exit {rc}); aborting.",
+                f"{progress} [error]   submission failed for {run_name} ({reason}); aborting.",
                 file=sys.stderr,
             )
             return rc
