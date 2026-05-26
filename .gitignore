@@ -2,7 +2,6 @@
 .vscode
 .DS_Store
 .gocache/
-inputs/fasta-5000000.txt
 /kwa/.env
 /.gomodcache/
 /.gocache_local/
